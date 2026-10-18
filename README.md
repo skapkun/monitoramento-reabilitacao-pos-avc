@@ -11,6 +11,7 @@ Protótipo de uma aplicação para acompanhar o progresso em terapias de reabili
 - [VALIDACAO_VIDEOS.md](./docs/VALIDACAO_VIDEOS.md): protocolo de validação com vídeos reais.
 - [VALIDACAO_ACESSIBILIDADE.md](./docs/VALIDACAO_ACESSIBILIDADE.md): roteiro de testes manuais de acessibilidade.
 - [APRESENTACAO_EVENTO.md](./docs/APRESENTACAO_EVENTO.md): preparação e roteiro da demonstração.
+- [GUIA_APRESENTACAO.md](./docs/GUIA_APRESENTACAO.md): execução completa da apresentação em 10 minutos.
 - [ALINHAMENTO_ARTIGO.md](./docs/ALINHAMENTO_ARTIGO.md): relação entre o artigo e o que foi implementado.
 
 ## Sobre o projeto

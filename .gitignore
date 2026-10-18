@@ -63,6 +63,7 @@ backend/temp/
 backend/uploads/
 backend/logs/
 backend/data/
+docs/APRESENTACAO_CREDENCIAIS.md
 *.log
 
 # ============================================================================
