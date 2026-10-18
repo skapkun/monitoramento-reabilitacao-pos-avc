@@ -10,5 +10,13 @@ services:
       ALLOWED_ORIGINS: http://localhost:3000,http://localhost:8080
       ANALYSIS_MODE: mock
       AUTH_MODE: disabled
+      VIDEO_STORAGE_DIR: /app/data/videos
+      VIDEO_DATABASE_PATH: /app/data/video_metadata.sqlite3
+      VIDEO_KEY_PATH: /app/data/video.key
+      VIDEO_RETENTION_DAYS: 30
     volumes:
       - ./backend/app:/app/app:ro
+      - movere-video-data:/app/data
+
+volumes:
+  movere-video-data:

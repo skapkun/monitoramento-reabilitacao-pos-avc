@@ -28,9 +28,9 @@ Este documento funciona como índice de rastreabilidade. A descrição completa 
 - Relato pós-sessão de bem-estar, dor/desconforto e fadiga, sem interpretação
   diagnóstica automática.
 - Motivo técnico estruturado quando a análise falhar ou for inconclusiva.
-- Compartilhamento opcional de até quatro capturas técnicas da sessão com o
-  fisioterapeuta vinculado, desativado por padrão e condicionado a
-  consentimento explícito. O vídeo original não é persistido.
+- Compartilhamento opcional de até quatro capturas técnicas e, em escolha
+  separada, do vídeo completo com o fisioterapeuta vinculado. As duas opções
+  começam desativadas. O vídeo é cifrado, privado e expira em até 30 dias.
 
 ## Requisitos de acessibilidade
 
@@ -69,7 +69,8 @@ Este documento funciona como índice de rastreabilidade. A descrição completa 
 - Visão computacional: MediaPipe e OpenCV.
 - Análise numérica: NumPy.
 - Autenticação e persistência estruturada: Firebase Authentication e Cloud Firestore.
-- Vídeos compartilhados opcionalmente: Firebase Storage.
+- Vídeos compartilhados opcionalmente: arquivos cifrados no servidor FastAPI,
+  com metadados protegidos em SQLite e volume persistente.
 - Relatórios: ReportLab e, quando necessário, Matplotlib.
 
 ## Documentos relacionados

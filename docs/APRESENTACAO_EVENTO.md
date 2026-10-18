@@ -28,15 +28,18 @@ Celular e notebook
         └── internet → Firebase Authentication e Firestore
 ```
 
-O vídeo é recebido temporariamente pelo backend, processado e apagado. Quando
-o paciente autoriza, somente até quatro capturas JPEG compactadas são mantidas
-no Firestore. O Firebase Storage não é necessário nesse modo.
+O vídeo é recebido temporariamente pelo backend, processado e apagado por
+padrão. O paciente pode autorizar separadamente capturas JPEG no Firestore e o
+vídeo completo no armazenamento cifrado do FastAPI por até 30 dias. O Firebase
+Storage não é necessário.
 
 ## Custo previsto
 
 O custo de hospedagem é zero enquanto o backend for executado no notebook.
 Continuam aplicáveis as cotas gratuitas do Firebase Authentication e do
-Firestore. O Firebase Storage permanece desativado.
+Firestore. O Firebase Storage permanece desativado. Para usar sem notebook, a
+hospedagem do FastAPI precisa oferecer HTTPS e disco persistente; o preço
+depende do provedor e não pode ser considerado zero por padrão.
 
 Não é recomendável contratar um servidor apenas para uma apresentação. Os
 planos gratuitos com 512 MB de memória podem não executar MediaPipe e OpenCV de
@@ -217,5 +220,7 @@ gravação de tela, pois autenticação e Firestore dependem de conexão externa
   memória.
 - A análise ainda precisa de validação com amostras humanas representativas.
 - O sistema é um protótipo acadêmico e não substitui avaliação clínica.
-- O vídeo completo não fica disponível para reprodução posterior.
+- O vídeo completo só pode ser reproduzido quando o paciente autoriza o
+  compartilhamento e o servidor mantém o volume persistente; ele expira em até
+  30 dias.
 - As capturas representam instantes técnicos e não constituem laudo.

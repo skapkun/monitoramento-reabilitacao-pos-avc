@@ -49,12 +49,13 @@ dado de saúde e somente pode ser usado e compartilhado conforme o TCLE, o
 protocolo de pesquisa e as medidas de segurança aprovadas. O aplicativo exibe
 esse aviso antes de gerar o arquivo.
 
-O vídeo é dado pessoal sensível e é apagado após o processamento. O
-compartilhamento de até quatro capturas técnicas começa desativado, requer
-escolha explícita do paciente e registra data e versão do consentimento. As
-capturas não recebem acesso público, podem ser apagadas pelo paciente e não
-devem ser reutilizadas para pesquisa sem base ética e consentimento específicos
-para essa finalidade.
+O vídeo é dado pessoal sensível e é apagado após o processamento por padrão.
+Capturas técnicas e vídeo completo possuem escolhas separadas, ambas
+desativadas inicialmente. O vídeo autorizado é cifrado no servidor, acessível
+somente ao paciente e ao fisioterapeuta escolhido e removido em até 30 dias.
+O paciente pode apagá-lo antes. Data e versão do consentimento ficam na sessão.
+Vídeo e capturas não devem ser reutilizados para pesquisa sem base ética e
+consentimento específicos para essa finalidade.
 
 ## Dados deliberadamente não coletados
 

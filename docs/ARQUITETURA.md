@@ -498,6 +498,29 @@ ESTRUTURA DE INSTRUÇÕES
 
 ## Organização da análise de vídeo
 
+### Armazenamento privado opcional
+
+O upload de análise continua temporário. Depois da sessão, o paciente pode
+autorizar separadamente o compartilhamento do vídeo completo. Nesse caso, o
+Flutter envia o arquivo autenticado para `POST /videos`; o FastAPI cifra o
+conteúdo e os metadados pessoais com AES-256-GCM e grava o índice mínimo em
+SQLite. A consulta e a exclusão usam o identificador da sessão, sem URL pública.
+
+```text
+Flutter autenticado
+        ↓
+FastAPI /videos
+        ├── SQLite: índice mínimo + metadados cifrados
+        └── volume persistente: arquivo cifrado
+                    ↓
+        paciente ou profissional escolhido
+```
+
+A chave fica em segredo de ambiente ou em arquivo com permissão restrita no
+volume persistente. Trocar ou perder a chave torna os vídeos irrecuperáveis.
+Uma tarefa do processo remove os arquivos vencidos periodicamente; a retenção
+padrão é de 30 dias. Em produção, o serviço exige HTTPS e autenticação Firebase.
+
 ### Pipeline de Processamento
 
 ```

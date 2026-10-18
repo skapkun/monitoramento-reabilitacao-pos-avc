@@ -57,10 +57,11 @@ O resultado é `inconclusive` quando faltam frames/landmarks confiáveis ou nenh
   parâmetro clínico validado nem recomendação de segurança.
 - Não há referência física de distância nem validação em população clínica.
 - A análise atual ocorre após a gravação; não é feedback contínuo durante o movimento.
-- A cópia recebida pelo backend é temporária e removida após o processamento.
-  Se o paciente der consentimento explícito, o aplicativo mantém no Firestore
-  até quatro capturas JPEG compactadas dos eventos técnicos para revisão
-  profissional e inclusão no PDF. O vídeo original não é persistido.
+- A cópia recebida pelo pipeline é temporária e removida após o processamento.
+  Capturas técnicas opcionais podem ser mantidas no Firestore. Com um segundo
+  consentimento explícito, o vídeo completo é enviado para o armazenamento
+  cifrado do FastAPI e expira em até 30 dias. Esse armazenamento não altera as
+  métricas nem substitui a revisão profissional.
 - Ainda faltam amostras humanas autorizadas e avaliação por fisioterapeuta conforme `VALIDACAO_VIDEOS.md`.
 
 ## Testes

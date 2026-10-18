@@ -1,6 +1,6 @@
 # Backend Movere
 
-API FastAPI e módulo de visão computacional do protótipo Movere. A API pode operar em modo simulado ou chamar o pipeline OpenCV, MediaPipe e NumPy da flexão de cotovelo.
+API FastAPI e módulo de visão computacional do protótipo Movere. A API pode operar em modo simulado ou chamar o pipeline OpenCV, MediaPipe e NumPy dos três exercícios.
 
 Para validar diretamente um vídeo real e gerar um relatório técnico JSON sem
 armazenar uma cópia do vídeo:
@@ -45,8 +45,6 @@ AUTH_MODE=firebase FIREBASE_PROJECT_ID=movere-dc610 python main.py
 
 Essa configuração valida assinatura, projeto, emissor e expiração do token sem armazenar uma chave administrativa. Para também verificar revogação, configure credenciais fora do repositório e use `FIREBASE_CHECK_REVOKED=true`. Em infraestrutura Google, prefira identidade do ambiente. `GET /health` permanece público; análises e relatórios exigem autenticação quando `AUTH_MODE=firebase`.
 
-Somente ative o modo real para validar vídeos da flexão de cotovelo. Agachamento e pinça ainda não possuem analisadores.
-
 A documentação OpenAPI estará em `http://localhost:8000/docs`.
 
 ## Testar
@@ -61,10 +59,20 @@ pytest
 - `POST /analysis`
 - `GET /analysis/{analysis_id}`
 - `POST /reports/longitudinal.pdf`
+- `POST /videos`
+- `GET /videos/{session_id}`
+- `DELETE /videos/{session_id}`
 
 O upload aceita MP4, MOV ou WebM e respeita `MAX_UPLOAD_BYTES`. O arquivo é temporário e removido ao final do processamento. O campo `simulated` impede que dados fictícios sejam confundidos com análise real.
 
-Os estados temporários dos jobs ainda são mantidos em memória: reiniciar o backend interrompe consultas em andamento. Depois da conclusão, o aplicativo persiste a sessão e suas métricas no Firestore, sem armazenar o vídeo por padrão.
+Os estados temporários dos jobs ainda são mantidos em memória: reiniciar o backend interrompe consultas em andamento. Depois da conclusão, o aplicativo persiste a sessão e suas métricas no Firestore.
+
+O vídeo completo não é armazenado por padrão. Se o paciente autorizar, a rota
+`POST /videos` guarda o arquivo cifrado com AES-256-GCM e os metadados cifrados
+em SQLite. Paciente e fisioterapeuta escolhido podem reproduzi-lo; somente o
+paciente pode apagá-lo antes da retenção de 30 dias. O diretório `data/` e a
+chave devem estar em volume persistente no servidor. Em produção, use HTTPS,
+`AUTH_MODE=firebase` e uma `VIDEO_ENCRYPTION_KEY` mantida fora do repositório.
 
 ## Visão computacional
 

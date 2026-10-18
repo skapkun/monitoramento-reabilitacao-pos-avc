@@ -526,12 +526,13 @@ remoção do arquivo temporário
 ```
 
 O compartilhamento com o fisioterapeuta é opcional e permanece desativado por
-padrão. Quando o paciente o autoriza, até quatro capturas JPEG compactadas dos
-momentos técnicos são armazenadas de forma privada no Firestore. Somente o
-paciente e o fisioterapeuta com vínculo aceito podem consultá-las. O paciente
-pode excluí-las, e a versão e a data do consentimento são registradas na
-sessão. O vídeo original é sempre removido após o processamento. As capturas
-autorizadas podem ser incluídas no PDF.
+padrão. Há escolhas separadas para as capturas técnicas e para o vídeo completo.
+As capturas JPEG compactadas ficam no Firestore e podem integrar o PDF. Quando
+o paciente autoriza o vídeo completo, ele é cifrado no servidor com AES-256-GCM,
+tem os metadados protegidos e fica disponível somente ao paciente e ao
+fisioterapeuta escolhido por até 30 dias. O paciente pode removê-lo antes do
+prazo. Data e versão do consentimento são registradas na sessão. A cópia
+temporária usada pela análise continua sendo apagada ao final do processamento.
 
 ### Dados Estruturados
 

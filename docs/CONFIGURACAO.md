@@ -317,33 +317,37 @@ Para verificar também se o token foi revogado, configure uma identidade do ambi
 
 ### 8. Ativar o compartilhamento privado de vídeos
 
-O armazenamento permanece inoperante até a criação do bucket:
+O vídeo completo usa o próprio FastAPI, sem Firebase Storage. Para teste local,
+os padrões do `.env.example` criam `backend/data/`, um banco SQLite e uma chave
+local com permissão restrita. Esse diretório não é versionado.
 
-1. No Firebase Console, abra **Storage** e selecione **Começar**.
-2. Confirme a localização e qualquer requisito de faturamento apresentado pelo
-   próprio console; não crie outro projeto.
-3. Publique as regras versionadas:
-
-```bash
-cd frontend
-firebase deploy --only storage
-```
-
-4. Aplique a exclusão automática por idade ao bucket criado:
+Em um servidor, monte `backend/data/` em disco persistente e defina uma chave
+fora do repositório:
 
 ```bash
-gcloud storage buckets update gs://movere-dc610.firebasestorage.app \
-  --lifecycle-file=storage.lifecycle.json
+python -c "import base64,secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())"
 ```
 
-As regras permitem criar e excluir o objeto somente ao paciente proprietário e
-ler somente ao proprietário ou ao fisioterapeuta com vínculo aceito. A leitura
-é bloqueada depois de 30 dias mesmo se a remoção física pelo ciclo de vida
-ainda estiver pendente. O caminho do arquivo nunca deve receber uma URL pública.
+Copie o resultado para o gerenciador de segredos da hospedagem como
+`VIDEO_ENCRYPTION_KEY`. Configure também:
 
-Para validar, use duas contas reais vinculadas: o paciente deve compartilhar
-um vídeo, ambos devem conseguir reproduzi-lo, uma terceira conta deve receber
-negação e somente o paciente deve conseguir excluí-lo antes do prazo.
+```text
+VIDEO_STORAGE_DIR=/app/data/videos
+VIDEO_DATABASE_PATH=/app/data/video_metadata.sqlite3
+VIDEO_RETENTION_DAYS=30
+VIDEO_CLEANUP_INTERVAL_SECONDS=21600
+AUTH_MODE=firebase
+```
+
+Não troque nem perca a chave enquanto existirem vídeos: sem ela, os arquivos e
+os metadados não podem ser recuperados. O servidor precisa usar HTTPS. A rotina
+de limpeza remove itens vencidos periodicamente e qualquer acesso depois da
+expiração também é negado.
+
+Para validar, use duas contas vinculadas: o paciente compartilha um vídeo, os
+dois o reproduzem, uma terceira conta recebe negação e somente o paciente
+consegue apagá-lo antes do prazo. Reinicie o servidor e repita a reprodução
+para confirmar que o volume é realmente persistente.
 
 ---
 
@@ -351,7 +355,12 @@ negação e somente o paciente deve conseguir excluí-lo antes do prazo.
 
 ### Backend
 
-Variáveis aceitas: `ENVIRONMENT`, `ANALYSIS_MODE`, `AUTH_MODE`, `FIREBASE_PROJECT_ID`, `FIREBASE_CHECK_REVOKED`, `MAX_UPLOAD_BYTES`, `ANALYSIS_TEMP_DIR`, `ALLOWED_ORIGINS` e, quando a checagem de revogação estiver ativa, `GOOGLE_APPLICATION_CREDENTIALS`.
+Variáveis aceitas: `ENVIRONMENT`, `ANALYSIS_MODE`, `AUTH_MODE`,
+`FIREBASE_PROJECT_ID`, `FIREBASE_CHECK_REVOKED`, `MAX_UPLOAD_BYTES`,
+`ANALYSIS_TEMP_DIR`, `ALLOWED_ORIGINS`, `VIDEO_STORAGE_DIR`,
+`VIDEO_DATABASE_PATH`, `VIDEO_KEY_PATH`, `VIDEO_ENCRYPTION_KEY`,
+`VIDEO_RETENTION_DAYS` e `VIDEO_CLEANUP_INTERVAL_SECONDS`. Quando a checagem de
+revogação estiver ativa, use também `GOOGLE_APPLICATION_CREDENTIALS`.
 
 ### Frontend
 

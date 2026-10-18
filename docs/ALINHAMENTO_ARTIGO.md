@@ -19,7 +19,8 @@ Este documento registra o estado do software em relação ao artigo **“Uma Apl
 | Qualidade técnica | motivo estruturado para análise inconclusiva ou falha, sem produzir resultado falso |
 | Revisão profissional | avaliação de 1 a 5 e conduta estruturada |
 | Relatórios | ReportLab com gráfico Matplotlib, métricas e aviso de que não é laudo |
-| Privacidade operacional | vídeo removido após processamento; até quatro capturas técnicas opcionais e privadas no Firestore, com controle por proprietário e vínculo |
+| Privacidade operacional | descarte por padrão; capturas opcionais no Firestore e vídeo completo opcional cifrado no FastAPI, com retenção de até 30 dias |
+| Revisão do vídeo | reprodução privada pelo paciente e pelo fisioterapeuta escolhido, sem URL pública |
 | Licença | MIT em `LICENSE` |
 
 ## Implementado com limitação explícita
@@ -31,11 +32,13 @@ Este documento registra o estado do software em relação ao artigo **“Uma Apl
   protótipo posterior ao artigo. Ela é separada da meta terapêutica, exige
   justificativa e não constitui parâmetro clínico validado.
 - A distância da pinça usa coordenadas normalizadas 2D; não é uma medida física.
-- Não há vídeo anotado ou persistido. Até quatro capturas técnicas podem ser
-  compartilhadas pelo paciente; a opção começa desativada, exige consentimento
-  explícito e não altera as métricas produzidas pela análise.
+- O vídeo compartilhado apresenta a gravação original; os eventos técnicos e
+  seus instantes aparecem associados à sessão, mas ainda não são desenhados
+  quadro a quadro sobre o arquivo reproduzido.
 - O vínculo atual é iniciado pelo fisioterapeuta com o identificador do paciente e confirmado pelo paciente. Isso difere do fluxo textual de código gerado pelo profissional, preservando consentimento explícito antes do acesso.
-- Firebase protege transporte, armazenamento gerenciado e autorização; o aplicativo não implementa uma camada adicional própria de banco local criptografado.
+- O Firestore mantém os dados estruturados. Vídeo e metadados audiovisuais são
+  cifrados com AES-256-GCM no servidor; o SQLite armazena apenas localizadores,
+  tamanho e expiração em claro, sem identificadores pessoais ou de sessão.
 
 ## Depende de validação humana ou decisão ética
 
@@ -58,7 +61,7 @@ ampliam retroativamente os resultados do artigo aceito e não constituem
 validação clínica. A finalidade e a minimização estão registradas em
 `DADOS_PESQUISA.md`.
 
-O compartilhamento opcional de capturas técnicas também é uma extensão
+O compartilhamento opcional de capturas técnicas e do vídeo completo é uma extensão
 posterior ao artigo. Ele aproxima o protótipo do fluxo de revisão profissional
 sem transformar a demonstração descrita no artigo em evidência de uma
 funcionalidade já validada no workshop.
@@ -81,18 +84,19 @@ A análise explicável por repetição é uma extensão posterior ao artigo. O
 sistema registra os segundos da maior amplitude, de amplitudes abaixo da
 referência técnica e de possíveis elevações do ombro ou inclinações do tronco.
 Quando o paciente autoriza, até quatro desses momentos são persistidos como
-JPEGs compactados no Firestore e podem ser incluídos no PDF. O vídeo original
-é apagado. Os eventos são heurísticos experimentais e exigem revisão do
-fisioterapeuta.
+JPEGs compactados no Firestore e podem ser incluídos no PDF. Em consentimento
+separado, o vídeo completo pode ser mantido cifrado por até 30 dias. Os eventos
+são heurísticos experimentais e exigem revisão do fisioterapeuta.
 
-## Verificações automatizadas em 12/10/2026
+## Verificações automatizadas em 18/10/2026
 
 - `flutter analyze`: sem problemas.
 - `flutter test`: 96 testes aprovados, incluindo as 26 rotas em telefone
   estreito, texto a 200%, limites dos alertas operacionais, calibração e
   apresentação dos eventos técnicos.
-- `pytest`: 44 testes aprovados, incluindo validação dos limiares
-  personalizados, extração compactada de capturas e PDF com evidência visual.
+- `pytest`: 47 testes aprovados, incluindo validação dos limiares
+  personalizados, extração de capturas, PDF e armazenamento cifrado de vídeo
+  com controle de acesso.
 - Dependências Python: sem incompatibilidades detectadas pelo `pip check`.
 - Regras do Firestore: compiladas e publicadas no projeto `movere-dc610`.
 - APK Android e `Runner.app` para simulador iOS: gerados com sucesso.

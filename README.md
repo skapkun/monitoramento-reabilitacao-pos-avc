@@ -147,8 +147,10 @@ Durante o desenvolvimento, o backend deve funcionar localmente. O protótipo nã
 
 ## Privacidade e segurança
 
-- Minimização de dados (vídeo descartado após análise; mediante consentimento,
-  apenas até quatro capturas técnicas compactadas são mantidas no Firestore)
+- Minimização de dados: o vídeo de análise é descartado por padrão. Mediante
+  consentimento separado, o vídeo completo pode ser mantido por até 30 dias no
+  servidor, criptografado e acessível apenas ao paciente e ao profissional
+  vinculado. Capturas técnicas compactadas continuam opcionais no Firestore.
 - Controle de acesso por perfil
 - Pacientes veem apenas seus dados
 - Fisioterapeuta vê apenas pacientes vinculados
@@ -179,7 +181,8 @@ Consulte [PROGRESSO.md](./docs/PROGRESSO.md) para verificar o estado real das ta
 - Os critérios técnicos não devem ser apresentados como critérios clínicos validados.
 - Resultados automáticos precisam admitir falha ou análise inconclusiva.
 - Qualquer conclusão clínica continua sob responsabilidade do profissional.
-- O vídeo é descartado após a análise, salvo quando houver consentimento para compartilhamento privado.
+- A análise não depende do armazenamento do vídeo. O compartilhamento privado
+  é opcional, começa desativado e expira em até 30 dias.
 
 ## Organização do trabalho
 

@@ -89,7 +89,8 @@ Atualizar este documento ao concluir cada tarefa. Não marcar itens apenas inici
 - [x] Momentos de maior amplitude, amplitude abaixo da referência e possíveis
   desvios associados aos segundos correspondentes do vídeo.
 - [x] Galeria privada de até quatro capturas técnicas autorizadas, com título e
-  instante observado; o vídeo original não é persistido.
+  instante observado; o vídeo completo usa consentimento separado e retenção
+  temporária no FastAPI.
 - [x] Comparação descritiva entre lado afetado e não afetado quando os dois
   lados possuem visibilidade suficiente.
 - [ ] Validar a interpretação do gráfico com uma série real representativa.
@@ -160,14 +161,15 @@ Atualizar este documento ao concluir cada tarefa. Não marcar itens apenas inici
 - [x] Análise estática limpa, 96 testes Flutter aprovados, APK Android e aplicativo para simulador iOS gerados.
 - [x] Versões FlutterFire fixadas e validadas com Flutter 3.35.7; alvo mínimo iOS 15.
 - [x] Authentication por e-mail/senha e Firestore `(default)` ativados no projeto remoto.
-- [x] Modo acadêmico sem vídeo persistente implementado: até quatro capturas
-  JPEG compactadas são extraídas, mediante consentimento, e protegidas no
-  Firestore para paciente e fisioterapeuta vinculado.
+- [x] Capturas JPEG opcionais protegidas no Firestore e compartilhamento
+  separado do vídeo completo implementados mediante consentimento.
 - [x] Exclusão das capturas pelo paciente e inclusão das evidências autorizadas
   no relatório PDF implementadas.
-- [x] Decisão registrada: Firebase Storage permanece opcional e desativado;
-  somente será necessário se uma versão futura precisar reproduzir o vídeo
-  completo.
+- [x] Reprodução privada do vídeo completo implementada sem Firebase Storage:
+  arquivo e metadados cifrados no FastAPI, retenção de até 30 dias, acesso do
+  paciente e profissional escolhido e exclusão antecipada pelo paciente.
+- [ ] Publicar o FastAPI com HTTPS e volume persistente e validar o fluxo com
+  duas contas Firebase vinculadas em dispositivo físico.
 - [x] Regras e índices publicados no Firestore remoto.
 - [x] Cadastro temporário, criação/leitura do próprio perfil e atualização de preferências validados remotamente.
 - [x] Alteração do papel e leitura do perfil de outro usuário bloqueadas pelas regras remotas.

@@ -527,6 +527,41 @@ Listar sessões do paciente.
 
 ---
 
+## Vídeos compartilhados
+
+As três rotas exigem token Firebase quando `AUTH_MODE=firebase`. O arquivo não
+recebe URL pública e não é retornado pelo Firestore.
+
+### `POST /videos`
+
+Armazena opcionalmente o vídeo de uma sessão após consentimento explícito.
+
+**Form Data:**
+
+```text
+video_file: <binary MP4, MOV ou WebM>
+session_id: uuid
+therapist_id: identificador do profissional escolhido
+consent_at: data ISO 8601
+```
+
+**Response (201):** retorna `storage_path`, datas de compartilhamento,
+consentimento e expiração, versão do consentimento e tamanho. O arquivo e os
+metadados pessoais são cifrados com AES-256-GCM.
+
+### `GET /videos/{session_id}`
+
+Reproduz o vídeo somente para o paciente proprietário ou o profissional
+escolhido. Retorna `404` também em tentativa sem acesso, evitando confirmar a
+existência do arquivo. A resposta usa `Cache-Control: private, no-store`.
+
+### `DELETE /videos/{session_id}`
+
+Permite ao paciente apagar o vídeo antes do prazo. O profissional pode
+visualizar, mas não excluir. Retorna `204` quando concluído.
+
+---
+
 ## Análise
 
 ### `POST /analysis`

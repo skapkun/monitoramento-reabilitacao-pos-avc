@@ -131,7 +131,7 @@ void main() {
     expect(find.text('Salvar avaliação'), findsOneWidget);
   });
 
-  testWidgets('compartilhamento de vídeo começa desativado e exige escolha', (
+  testWidgets('compartilhamentos começam desativados e exigem escolha', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -150,6 +150,23 @@ void main() {
       find.byKey(const Key('compartilhar_video')),
     );
     expect(selected.value, isTrue);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('compartilhar_video_completo')),
+    );
+    await tester.pumpAndSettle();
+    final fullVideoCheckbox = tester.widget<CheckboxListTile>(
+      find.byKey(const Key('compartilhar_video_completo')),
+    );
+    expect(fullVideoCheckbox.value, isFalse);
+
+    await tester.tap(find.byKey(const Key('compartilhar_video_completo')));
+    await tester.pump();
+
+    final fullVideoSelected = tester.widget<CheckboxListTile>(
+      find.byKey(const Key('compartilhar_video_completo')),
+    );
+    expect(fullVideoSelected.value, isTrue);
   });
 
   testWidgets('sessão compartilhada oferece reprodução ao usuário autorizado', (
