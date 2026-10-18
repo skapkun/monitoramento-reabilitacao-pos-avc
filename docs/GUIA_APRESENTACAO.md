@@ -4,6 +4,10 @@ Este é o roteiro operacional para preparar, testar e apresentar o Movere em 10
 minutos. As credenciais ficam apenas no arquivo local
 `docs/APRESENTACAO_CREDENCIAIS.md`, ignorado pelo Git.
 
+> **Aviso da demonstração:** todos os nomes, contatos, registros profissionais
+> e dados clínicos exibidos são fictícios e foram criados exclusivamente para
+> apresentação acadêmica.
+
 ## O que já está preparado
 
 - conta de paciente de apresentação;
@@ -213,6 +217,9 @@ novamente com o novo IP.
 > diagnóstico, não substitui avaliação profissional e ainda requer validação
 > clínica. A demonstração usa um voluntário saudável e comprova somente o
 > funcionamento técnico.
+
+Antes de seguir, informe que todos os nomes, contatos, registros profissionais
+e dados clínicos mostrados são fictícios e exclusivos da demonstração.
 
 ### 1:30–2:15 — Arquitetura
 

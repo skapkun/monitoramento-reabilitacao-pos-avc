@@ -205,7 +205,7 @@ def profile_data(*, name: str, email: str, role: str, now: datetime) -> dict[str
         common.update(
             {
                 "phone": "(69) 99999-2002",
-                "professionalRegistration": "CREFITO 000000-F",
+                "professionalRegistration": "Registro fictício — apresentação acadêmica",
             }
         )
     return common
