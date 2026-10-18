@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "522412857046",
+    "project_id": "movere-dc610",
+    "storage_bucket": "movere-dc610.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522412857046:android:c3407fb6a140102a39db77",
+        "android_client_info": {
+          "package_name": "com.app.movere"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_7LrlT3Nch2_sI95YW-QtenVJXjWcE3g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

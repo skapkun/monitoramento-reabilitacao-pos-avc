@@ -1,0 +1,237 @@
+# Git Ignore for Movere Project
+
+# ============================================================================
+# PYTHON / BACKEND
+# ============================================================================
+
+# Virtual Environment
+backend/venv/
+backend/env/
+backend/.venv/
+backend/.pycache/
+backend/.env
+backend/.env.local
+backend/.env.*.local
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+.Python
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Sensitive files
+backend/firebase_key.json
+backend/credentials.json
+backend/.env
+
+# Temporary files
+backend/temp/
+backend/uploads/
+backend/logs/
+*.log
+
+# ============================================================================
+# FLUTTER / FRONTEND
+# ============================================================================
+
+# Miscellaneous
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.packages
+frontend/.pub-cache/
+frontend/.pub/
+frontend/build/
+
+# Flutter/Dart/Pub specific
+frontend/.dart_tool/
+
+# Environments
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# IDEs
+frontend/.vscode/
+frontend/.idea/
+frontend/*.iml
+frontend/*.sublime-workspace
+frontend/*.sublime-project
+
+# Temporary files
+frontend/*.jam
+frontend/flutter_*.png
+frontend/Flutter.log
+
+# OS
+frontend/.DS_Store
+frontend/Thumbs.db
+
+# Build output
+frontend/.gradle
+frontend/*.jks
+frontend/*.keystore
+
+# ============================================================================
+# GENERAL
+# ============================================================================
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+.~*
+
+# Logs
+*.log
+logs/
+
+# Dependency lock files (optional - manter rastreado para reproducibility)
+# Descomente se quiser ignorar lock files
+# backend/requirements.lock
+# frontend/pubspec.lock
+
+# ============================================================================
+# SENSITIVE INFORMATION
+# ============================================================================
+
+# Do NOT commit credentials, keys, or secrets
+*.key
+*.pem
+*.p12
+*.pfx
+*.keystore
+.env
+secrets/
+config/secrets.json
+firebase_key.json
+# Os arquivos de configuração cliente do Firebase não são credenciais
+# administrativas. Restrinja as chaves no Google Cloud e nunca versione uma
+# chave de conta de serviço.
+
+# ============================================================================
+# VIDEOS E MÍDIA (Temporária)
+# ============================================================================
+
+backend/temp_videos/
+*.mp4
+*.mov
+*.avi
+*.webm
+
+# ============================================================================
+# DOCUMENTATION GENERATED
+# ============================================================================
+
+docs/generated/
+docs/site/
+
+# ============================================================================
+# TESTING
+# ============================================================================
+
+test_videos/
+test_results/
+coverage/
+.coverage
+
+# ============================================================================
+# DEVELOPMENT SPECIFIC
+# ============================================================================
+
+# Local development notes
+TODO.md
+NOTE.md
+local_config.md
+
+# Profiling
+*.prof
+*.profile
+
+# ============================================================================
+# IDE Specific
+# ============================================================================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+.vim/
+*.vim
+session.vim
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ============================================================================
+# BUILD ARTIFACTS
+# ============================================================================
+
+*.o
+*.obj
+*.class
+*.so
+*.dylib
+*.dll
+*.exe
+
+**/dist/
+**/build/
+**/target/

@@ -1,0 +1,563 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function validRole(role) {
+      return role == 'patient' || role == 'therapist';
+    }
+
+    function roleIs(role) {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+
+    function acceptedLink(patientId, therapistId) {
+      return exists(/databases/$(database)/documents/careLinks/$(therapistId + '_' + patientId))
+        && get(/databases/$(database)/documents/careLinks/$(therapistId + '_' + patientId)).data.status == 'accepted';
+    }
+
+    function isLinkedTherapist(patientId) {
+      return roleIs('therapist') && acceptedLink(patientId, request.auth.uid);
+    }
+
+    function validEvidenceItem(item) {
+      return item is map
+        && item.keys().hasOnly([
+          'eventIndex', 'eventType', 'title', 'timestampSeconds',
+          'contentType', 'bytes'
+        ])
+        && item.eventIndex is int
+        && item.eventIndex >= 0
+        && item.eventIndex <= 3
+        && item.eventType is string
+        && item.eventType.size() <= 80
+        && item.title is string
+        && item.title.size() <= 160
+        && item.timestampSeconds is number
+        && item.timestampSeconds >= 0
+        && item.contentType == 'image/jpeg'
+        && item.bytes is bytes
+        && item.bytes.size() <= 90000;
+    }
+
+    function validEvidence(data) {
+      return data.analysisEvidence is list
+        && data.analysisEvidence.size() <= 4
+        && (data.analysisEvidence.size() == 0 || (
+          data.evidenceConsentVersion == 'analysis-evidence-v1'
+          && data.evidenceConsentAt is timestamp
+          && validEvidenceItem(data.analysisEvidence[0])
+          && (data.analysisEvidence.size() < 2
+            || validEvidenceItem(data.analysisEvidence[1]))
+          && (data.analysisEvidence.size() < 3
+            || validEvidenceItem(data.analysisEvidence[2]))
+          && (data.analysisEvidence.size() < 4
+            || validEvidenceItem(data.analysisEvidence[3]))
+        ));
+    }
+
+    function validCalibration(data) {
+      return data.customDetectionEnabled is bool
+        && (!data.customDetectionEnabled || (
+          data.detectionStartThreshold is number
+          && data.detectionChangeThreshold is number
+          && data.calibrationReason is string
+          && data.calibrationReason.size() >= 10
+          && data.calibrationReason.size() <= 300
+          && (
+            (data.exerciseType == 'pinch'
+              && data.detectionStartThreshold >= 0.06
+              && data.detectionStartThreshold <= 0.20
+              && data.detectionChangeThreshold >= 0.01
+              && data.detectionChangeThreshold <= 0.09
+              && data.detectionStartThreshold - data.detectionChangeThreshold >= 0.02)
+            ||
+            (data.exerciseType != 'pinch'
+              && data.detectionStartThreshold >= 120
+              && data.detectionStartThreshold <= 175
+              && data.detectionChangeThreshold >= 40
+              && data.detectionChangeThreshold <= 140
+              && data.detectionStartThreshold - data.detectionChangeThreshold >= 20)
+          )
+        ));
+    }
+
+    match /users/{userId} {
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly([
+          'name',
+          'email',
+          'role',
+          'phone',
+          'professionalRegistration',
+          'affectedSide',
+          'strokeType',
+          'mobility',
+          'ageRange',
+          'monthsSinceStroke',
+          'dominantSide',
+          'assistiveDevice',
+          'participantContext',
+          'active',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 120
+        && request.resource.data.email == request.auth.token.email
+        && validRole(request.resource.data.role)
+        && (!('phone' in request.resource.data)
+          || (request.resource.data.phone is string
+            && request.resource.data.phone.size() <= 30))
+        && (!('professionalRegistration' in request.resource.data)
+          || (request.resource.data.role == 'therapist'
+            && request.resource.data.professionalRegistration is string
+            && request.resource.data.professionalRegistration.size() >= 2
+            && request.resource.data.professionalRegistration.size() <= 60))
+        && (!('affectedSide' in request.resource.data)
+          || (request.resource.data.role == 'patient'
+            && request.resource.data.affectedSide in ['left', 'right', 'bilateral', 'not_informed']))
+        && (!('strokeType' in request.resource.data)
+          || (request.resource.data.role == 'patient'
+            && request.resource.data.strokeType in ['ischemic', 'hemorrhagic', 'not_informed']))
+        && (!('mobility' in request.resource.data)
+          || (request.resource.data.role == 'patient'
+            && request.resource.data.mobility in ['independent', 'with_support', 'wheelchair', 'not_informed']))
+        && (!('ageRange' in request.resource.data)
+          || (request.resource.data.role == 'patient'
+            && request.resource.data.ageRange in ['under_40', '40_49', '50_59', '60_69', '70_79', '80_plus', 'not_informed']))
+        && (!('monthsSinceStroke' in request.resource.data)
+          || (request.resource.data.role == 'patient'
+            && request.resource.data.monthsSinceStroke is int
+            && request.resource.data.monthsSinceStroke >= 0
+            && request.resource.data.monthsSinceStroke <= 600))
+        && (!('dominantSide' in request.resource.data)
+          || (request.resource.data.role == 'patient'
+            && request.resource.data.dominantSide in ['left', 'right', 'ambidextrous', 'not_informed']))
+        && (!('assistiveDevice' in request.resource.data)
+          || (request.resource.data.role == 'patient'
+            && request.resource.data.assistiveDevice in ['none', 'cane', 'walker', 'wheelchair', 'other', 'not_informed']))
+        && (!('participantContext' in request.resource.data)
+          || (request.resource.data.role == 'patient'
+            && request.resource.data.participantContext in [
+              'post_stroke', 'healthy_volunteer', 'not_informed'
+            ]))
+        && request.resource.data.active == true;
+
+      allow read: if isOwner(userId) || isLinkedTherapist(userId);
+
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name',
+          'phone',
+          'professionalRegistration',
+          'affectedSide',
+          'strokeType',
+          'mobility',
+          'ageRange',
+          'monthsSinceStroke',
+          'dominantSide',
+          'assistiveDevice',
+          'participantContext',
+          'accessibilityPreferences',
+          'updatedAt'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 120
+        && (!('phone' in request.resource.data)
+          || (request.resource.data.phone is string
+            && request.resource.data.phone.size() <= 30))
+        && (!('professionalRegistration' in request.resource.data)
+          || (resource.data.role == 'therapist'
+            && request.resource.data.professionalRegistration is string
+            && request.resource.data.professionalRegistration.size() >= 2
+            && request.resource.data.professionalRegistration.size() <= 60))
+        && (!('affectedSide' in request.resource.data)
+          || (resource.data.role == 'patient'
+            && request.resource.data.affectedSide in ['left', 'right', 'bilateral', 'not_informed']))
+        && (!('strokeType' in request.resource.data)
+          || (resource.data.role == 'patient'
+            && request.resource.data.strokeType in ['ischemic', 'hemorrhagic', 'not_informed']))
+        && (!('mobility' in request.resource.data)
+          || (resource.data.role == 'patient'
+            && request.resource.data.mobility in ['independent', 'with_support', 'wheelchair', 'not_informed']))
+        && (!('ageRange' in request.resource.data)
+          || (resource.data.role == 'patient'
+            && request.resource.data.ageRange in ['under_40', '40_49', '50_59', '60_69', '70_79', '80_plus', 'not_informed']))
+        && (!('monthsSinceStroke' in request.resource.data)
+          || (resource.data.role == 'patient'
+            && request.resource.data.monthsSinceStroke is int
+            && request.resource.data.monthsSinceStroke >= 0
+            && request.resource.data.monthsSinceStroke <= 600))
+        && (!('dominantSide' in request.resource.data)
+          || (resource.data.role == 'patient'
+            && request.resource.data.dominantSide in ['left', 'right', 'ambidextrous', 'not_informed']))
+        && (!('assistiveDevice' in request.resource.data)
+          || (resource.data.role == 'patient'
+            && request.resource.data.assistiveDevice in ['none', 'cane', 'walker', 'wheelchair', 'other', 'not_informed']))
+        && (!('participantContext' in request.resource.data)
+          || (resource.data.role == 'patient'
+            && request.resource.data.participantContext in [
+              'post_stroke', 'healthy_volunteer', 'not_informed'
+            ]));
+
+      allow delete: if false;
+    }
+
+    match /careLinks/{linkId} {
+      allow create: if roleIs('therapist')
+        && request.resource.data.keys().hasOnly([
+          'therapistId', 'therapistName', 'patientId', 'status',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.therapistId == request.auth.uid
+        && request.resource.data.patientId is string
+        && request.resource.data.patientId != request.auth.uid
+        && request.resource.data.status == 'pending'
+        && linkId == request.auth.uid + '_' + request.resource.data.patientId
+        && get(/databases/$(database)/documents/users/$(request.resource.data.patientId)).data.role == 'patient';
+
+      allow read: if signedIn()
+        && (resource.data.patientId == request.auth.uid
+          || resource.data.therapistId == request.auth.uid);
+
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && (
+          (resource.data.patientId == request.auth.uid
+            && resource.data.status == 'pending'
+            && (request.resource.data.status == 'accepted'
+              || request.resource.data.status == 'rejected'))
+          ||
+          (resource.data.therapistId == request.auth.uid
+            && resource.data.status == 'rejected'
+            && request.resource.data.status == 'pending')
+        );
+
+      allow delete: if false;
+    }
+
+    match /plans/{planId} {
+      allow read: if signedIn()
+        && (resource.data.patientId == request.auth.uid
+          || isLinkedTherapist(resource.data.patientId));
+      allow create: if isLinkedTherapist(request.resource.data.patientId)
+        && request.resource.data.therapistId == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'patientId', 'therapistId', 'exerciseType', 'title',
+          'instructions', 'sessionsPerWeek', 'targetRepetitions',
+          'version', 'sets', 'targetAmplitudeDegrees', 'trainingSide',
+          'cadenceSeconds', 'restSeconds', 'startDate', 'endDate',
+          'customDetectionEnabled', 'detectionStartThreshold',
+          'detectionChangeThreshold', 'calibrationReason',
+          'active', 'updatedAt'
+        ])
+        && request.resource.data.exerciseType is string
+        && request.resource.data.sessionsPerWeek is int
+        && request.resource.data.sessionsPerWeek >= 1
+        && request.resource.data.sessionsPerWeek <= 7
+        && request.resource.data.targetRepetitions is int
+        && request.resource.data.targetRepetitions >= 1
+        && request.resource.data.targetRepetitions <= 100
+        && request.resource.data.version is int
+        && request.resource.data.version >= 1
+        && request.resource.data.sets is int
+        && request.resource.data.sets >= 1
+        && request.resource.data.sets <= 10
+        && (request.resource.data.targetAmplitudeDegrees == null
+          || (request.resource.data.targetAmplitudeDegrees is number
+            && request.resource.data.targetAmplitudeDegrees >= 1
+            && request.resource.data.targetAmplitudeDegrees <= 180))
+        && request.resource.data.trainingSide in [
+          'affected', 'left', 'right', 'bilateral'
+        ]
+        && (request.resource.data.cadenceSeconds == null
+          || (request.resource.data.cadenceSeconds is number
+            && request.resource.data.cadenceSeconds >= 1
+            && request.resource.data.cadenceSeconds <= 30))
+        && request.resource.data.restSeconds is int
+        && request.resource.data.restSeconds >= 0
+        && request.resource.data.restSeconds <= 600
+        && validCalibration(request.resource.data)
+        && (request.resource.data.startDate == null
+          || request.resource.data.startDate is timestamp)
+        && (request.resource.data.endDate == null
+          || request.resource.data.endDate is timestamp);
+      allow update: if isLinkedTherapist(resource.data.patientId)
+        && request.resource.data.patientId == resource.data.patientId
+        && request.resource.data.therapistId == resource.data.therapistId
+        && request.resource.data.version is int
+        && ((!('version' in resource.data)
+            && request.resource.data.version == 1)
+          || request.resource.data.version == resource.data.version + 1)
+        && request.resource.data.sessionsPerWeek is int
+        && request.resource.data.sessionsPerWeek >= 1
+        && request.resource.data.sessionsPerWeek <= 7
+        && request.resource.data.targetRepetitions is int
+        && request.resource.data.targetRepetitions >= 1
+        && request.resource.data.targetRepetitions <= 100
+        && request.resource.data.sets is int
+        && request.resource.data.sets >= 1
+        && request.resource.data.sets <= 10
+        && (request.resource.data.targetAmplitudeDegrees == null
+          || (request.resource.data.targetAmplitudeDegrees is number
+            && request.resource.data.targetAmplitudeDegrees >= 1
+            && request.resource.data.targetAmplitudeDegrees <= 180))
+        && request.resource.data.trainingSide in [
+          'affected', 'left', 'right', 'bilateral'
+        ]
+        && (request.resource.data.cadenceSeconds == null
+          || (request.resource.data.cadenceSeconds is number
+            && request.resource.data.cadenceSeconds >= 1
+            && request.resource.data.cadenceSeconds <= 30))
+        && request.resource.data.restSeconds is int
+        && request.resource.data.restSeconds >= 0
+        && request.resource.data.restSeconds <= 600
+        && validCalibration(request.resource.data);
+      allow delete: if false;
+    }
+
+    match /sessions/{sessionId} {
+      allow create: if roleIs('patient')
+        && request.resource.data.patientId == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'patientId', 'exerciseType', 'status', 'repetitions',
+          'averageAmplitudeDegrees', 'confidence', 'requiresReview',
+          'averageDurationSeconds', 'averageVelocityDegreesPerSecond',
+          'averageSymmetryDifferenceDegrees', 'averageDistance',
+          'simulated', 'message', 'technicalIssueCode', 'createdAt'
+          , 'prescriptionVersion', 'prescribedSets',
+          'prescribedRepetitions', 'prescribedSessionsPerWeek',
+          'prescribedAmplitudeDegrees', 'prescribedTrainingSide',
+          'prescribedCadenceSeconds', 'prescribedRestSeconds',
+          'customDetectionApplied', 'detectionStartThreshold',
+          'detectionChangeThreshold', 'calibrationReason',
+          'movementEvents', 'repetitionDetails', 'affectedSideAtAnalysis',
+          'unaffectedSideAtAnalysis', 'averageAffectedAngleDegrees',
+          'averageUnaffectedAngleDegrees', 'analysisParametersVersion',
+          'validFrames', 'totalFrames', 'detectionRatio'
+          , 'analysisEvidence', 'evidenceConsentAt',
+          'evidenceConsentVersion'
+        ])
+        && request.resource.data.exerciseType is string
+        && request.resource.data.status in ['completed', 'failed', 'inconclusive']
+        && request.resource.data.repetitions is int
+        && request.resource.data.repetitions >= 0
+        && request.resource.data.repetitions <= 10000
+        && request.resource.data.requiresReview is bool
+        && request.resource.data.simulated is bool
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 2000
+        && (!('technicalIssueCode' in request.resource.data)
+          || request.resource.data.technicalIssueCode == null
+          || request.resource.data.technicalIssueCode in [
+            'insufficient_frames', 'low_visibility', 'no_complete_cycle',
+            'technical_failure', 'inconclusive_analysis'
+          ])
+        && request.resource.data.movementEvents is list
+        && request.resource.data.movementEvents.size() <= 100
+        && request.resource.data.repetitionDetails is list
+        && request.resource.data.repetitionDetails.size() <= 100
+        && request.resource.data.customDetectionApplied is bool
+        && (!request.resource.data.customDetectionApplied || (
+          request.resource.data.detectionStartThreshold is number
+          && request.resource.data.detectionChangeThreshold is number
+          && request.resource.data.calibrationReason is string
+          && request.resource.data.calibrationReason.size() >= 10
+          && request.resource.data.calibrationReason.size() <= 300
+          && (
+            (request.resource.data.exerciseType == 'pinch'
+              && request.resource.data.detectionStartThreshold >= 0.06
+              && request.resource.data.detectionStartThreshold <= 0.20
+              && request.resource.data.detectionChangeThreshold >= 0.01
+              && request.resource.data.detectionChangeThreshold <= 0.09
+              && request.resource.data.detectionStartThreshold - request.resource.data.detectionChangeThreshold >= 0.02)
+            ||
+            (request.resource.data.exerciseType != 'pinch'
+              && request.resource.data.detectionStartThreshold >= 120
+              && request.resource.data.detectionStartThreshold <= 175
+              && request.resource.data.detectionChangeThreshold >= 40
+              && request.resource.data.detectionChangeThreshold <= 140
+              && request.resource.data.detectionStartThreshold - request.resource.data.detectionChangeThreshold >= 20)
+          )
+        ))
+        && validEvidence(request.resource.data)
+        && (request.resource.data.affectedSideAtAnalysis == null
+          || request.resource.data.affectedSideAtAnalysis in ['left', 'right'])
+        && (request.resource.data.unaffectedSideAtAnalysis == null
+          || request.resource.data.unaffectedSideAtAnalysis in ['left', 'right'])
+        && (request.resource.data.averageAffectedAngleDegrees == null
+          || request.resource.data.averageAffectedAngleDegrees is number)
+        && (request.resource.data.averageUnaffectedAngleDegrees == null
+          || request.resource.data.averageUnaffectedAngleDegrees is number)
+        && (request.resource.data.analysisParametersVersion == null
+          || request.resource.data.analysisParametersVersion is string)
+        && (request.resource.data.validFrames == null
+          || request.resource.data.validFrames is int)
+        && (request.resource.data.totalFrames == null
+          || request.resource.data.totalFrames is int)
+        && (request.resource.data.detectionRatio == null
+          || request.resource.data.detectionRatio is number);
+      allow read: if signedIn()
+        && (resource.data.patientId == request.auth.uid
+          || isLinkedTherapist(resource.data.patientId));
+      allow update: if (
+          isLinkedTherapist(resource.data.patientId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'requiresReview', 'reviewedAt', 'reviewedBy'
+            , 'professionalRating', 'professionalConduct', 'eventReviews',
+            'reviewComment', 'reviewVisibleToPatient'
+          ])
+          && request.resource.data.reviewedBy == request.auth.uid
+          && (!('professionalRating' in request.resource.data)
+            || (request.resource.data.professionalRating is int
+              && request.resource.data.professionalRating >= 1
+              && request.resource.data.professionalRating <= 5))
+          && (!('professionalConduct' in request.resource.data)
+            || request.resource.data.professionalConduct in [
+              'maintain_training', 'adjust_load', 'schedule_reassessment'
+            ])
+          && (!('eventReviews' in request.resource.data)
+            || request.resource.data.eventReviews is map)
+          && (!('reviewComment' in request.resource.data)
+            || (request.resource.data.reviewComment is string
+              && request.resource.data.reviewComment.size() <= 1000))
+          && (!('reviewVisibleToPatient' in request.resource.data)
+            || request.resource.data.reviewVisibleToPatient is bool)
+        ) || (
+          resource.data.patientId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'wellbeingScore', 'wellbeingNote', 'wellbeingUpdatedAt'
+            , 'painScore', 'fatigueScore'
+          ])
+          && request.resource.data.wellbeingScore is int
+          && request.resource.data.wellbeingScore >= 1
+          && request.resource.data.wellbeingScore <= 5
+          && request.resource.data.wellbeingNote is string
+          && request.resource.data.wellbeingNote.size() <= 500
+          && request.resource.data.painScore is int
+          && request.resource.data.painScore >= 0
+          && request.resource.data.painScore <= 10
+          && request.resource.data.fatigueScore is int
+          && request.resource.data.fatigueScore >= 0
+          && request.resource.data.fatigueScore <= 10
+        ) || (
+          resource.data.patientId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'videoStoragePath', 'videoSharedAt', 'videoConsentAt',
+            'videoRetentionUntil', 'videoConsentVersion', 'videoDeletedAt'
+          ])
+          && (!('videoStoragePath' in request.resource.data) || (
+            request.resource.data.videoStoragePath
+              == 'sessionVideos/' + request.auth.uid + '/' + sessionId + '/video'
+            && request.resource.data.videoConsentVersion == 'video-sharing-v1'
+            && request.resource.data.videoConsentAt is timestamp
+            && request.resource.data.videoRetentionUntil is timestamp
+            && request.resource.data.videoRetentionUntil > request.time
+            && request.resource.data.videoRetentionUntil
+              <= request.time + duration.value(30, 'd')
+          ))
+          && (!('videoConsentVersion' in request.resource.data)
+            || request.resource.data.videoConsentVersion == 'video-sharing-v1')
+          && (!('videoSharedAt' in request.resource.data)
+            || request.resource.data.videoSharedAt is timestamp)
+          && (!('videoConsentAt' in request.resource.data)
+            || request.resource.data.videoConsentAt is timestamp)
+          && (!('videoRetentionUntil' in request.resource.data)
+            || request.resource.data.videoRetentionUntil is timestamp)
+          && (!('videoDeletedAt' in request.resource.data)
+            || request.resource.data.videoDeletedAt is timestamp)
+        ) || (
+          resource.data.patientId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'analysisEvidence', 'evidenceDeletedAt'
+          ])
+          && request.resource.data.analysisEvidence is list
+          && request.resource.data.analysisEvidence.size() == 0
+          && request.resource.data.evidenceDeletedAt is timestamp
+        );
+      allow delete: if false;
+    }
+
+    match /notes/{noteId} {
+      allow create: if isLinkedTherapist(request.resource.data.patientId)
+        && request.resource.data.therapistId == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'patientId', 'therapistId', 'text', 'visibleToPatient', 'createdAt'
+        ])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 2
+        && request.resource.data.text.size() <= 2000;
+      allow read: if signedIn()
+        && (isLinkedTherapist(resource.data.patientId)
+          || (resource.data.patientId == request.auth.uid
+            && resource.data.visibleToPatient == true));
+      allow update, delete: if false;
+    }
+
+    match /messages/{messageId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          'patientId', 'therapistId', 'senderId', 'senderRole',
+          'recipientId', 'participants', 'text', 'category', 'sessionId', 'createdAt',
+          'readAt'
+        ])
+        && acceptedLink(
+          request.resource.data.patientId,
+          request.resource.data.therapistId
+        )
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.participants
+          == [request.resource.data.patientId, request.resource.data.therapistId]
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 2
+        && request.resource.data.text.size() <= 1000
+        && request.resource.data.category in [
+          'general', 'discomfort', 'could_not_complete', 'movement_question'
+        ]
+        && (request.resource.data.sessionId == null
+          || request.resource.data.sessionId is string)
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.readAt == null
+        && (
+          (request.auth.uid == request.resource.data.patientId
+            && request.resource.data.senderRole == 'patient'
+            && request.resource.data.recipientId
+              == request.resource.data.therapistId)
+          ||
+          (request.auth.uid == request.resource.data.therapistId
+            && request.resource.data.senderRole == 'therapist'
+            && request.resource.data.recipientId
+              == request.resource.data.patientId)
+        );
+
+      allow read: if signedIn()
+        && request.auth.uid in resource.data.participants;
+
+      allow update: if signedIn()
+        && request.auth.uid == resource.data.recipientId
+        && acceptedLink(resource.data.patientId, resource.data.therapistId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'readAt'
+        ])
+        && resource.data.readAt == null
+        && request.resource.data.readAt is timestamp;
+
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

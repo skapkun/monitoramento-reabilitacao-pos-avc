@@ -1,0 +1,14 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      ENVIRONMENT: development
+      MAX_UPLOAD_BYTES: 104857600
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:8080
+      ANALYSIS_MODE: mock
+      AUTH_MODE: disabled
+    volumes:
+      - ./backend/app:/app/app:ro
