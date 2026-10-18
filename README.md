@@ -70,17 +70,36 @@ movere/
 - Git
 - Docker Desktop ou Docker Engine com Compose (opcional, somente para o backend)
 
+Use o terminal do seu sistema: Terminal no macOS/Linux ou PowerShell no
+Windows. Para preparar Flutter, Android Studio, emuladores e dispositivos,
+consulte o guia detalhado em [CONFIGURACAO.md](./docs/CONFIGURACAO.md).
+
 ### Instalação
 
 #### Backend (FastAPI)
 
+macOS/Linux:
+
 ```bash
 cd backend
 python3 -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements-dev.txt
 python main.py
 ```
+
+Windows PowerShell:
+
+```powershell
+cd backend
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
+python main.py
+```
+
+Se o PowerShell bloquear a ativação, execute uma vez na sessão atual:
+`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`.
 
 Servidor disponível em: `http://localhost:8000`
 
@@ -94,9 +113,12 @@ O uso de Docker é opcional. O Flutter deve continuar sendo executado diretament
 
 #### Frontend (Flutter)
 
+Os comandos são os mesmos no macOS, Linux e Windows:
+
 ```bash
 cd frontend
 flutter pub get
+flutter doctor
 flutter run
 ```
 
@@ -192,6 +214,12 @@ Consulte [PROGRESSO.md](./docs/PROGRESSO.md) para verificar o estado real das ta
 3. Siga a arquitetura proposta ([ARQUITETURA.md](./docs/ARQUITETURA.md))
 4. Trabalhe em uma fase por vez
 5. Documente as mudanças
+
+## Dados sintéticos para apresentação
+
+O script `tools/seed_presentation.py` cria contas, vínculo, planos e histórico
+sintético no Firebase sem versionar senhas. Consulte
+[GUIA_APRESENTACAO.md](./docs/GUIA_APRESENTACAO.md) antes de executá-lo.
 
 ## Onde encontrar cada informação
 

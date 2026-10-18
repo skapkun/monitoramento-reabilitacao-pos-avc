@@ -7,8 +7,11 @@ Instruções passo a passo para configurar o ambiente de desenvolvimento local.
 ## Pré-requisitos
 
 ### Sistema Operacional
-- macOS 11.0+ (ou Linux/Windows com WSL)
+- macOS 11.0+, Linux ou Windows 10/11
 - Git instalado
+
+No Windows, os exemplos específicos usam PowerShell. WSL é opcional e não é
+necessário para executar o projeto.
 
 ### Hardware Recomendado
 - RAM: 8 GB mínimo (16 GB recomendado)
@@ -35,6 +38,13 @@ brew install git
 sudo apt install git
 ```
 
+**Windows:** instale pelo [site oficial do Git](https://git-scm.com/download/win)
+ou, no PowerShell, execute:
+
+```powershell
+winget install --id Git.Git -e
+```
+
 **Verificar:**
 ```bash
 git --version
@@ -44,9 +54,12 @@ git --version
 
 ```bash
 cd ~/Documents/projeto
-git clone <seu-repositorio> movere
+git clone https://github.com/skapkun/monitoramento-reabilitacao-pos-avc.git movere
 cd movere
 ```
+
+No Windows, escolha uma pasta de trabalho e execute os mesmos comandos no
+PowerShell; por exemplo, `cd $HOME\Documents` antes do `git clone`.
 
 ---
 
@@ -67,6 +80,9 @@ cd ~/development
 git clone https://github.com/flutter/flutter.git -b stable
 export PATH="$PATH:~/development/flutter/bin"
 ```
+
+**Windows:** siga a instalação oficial do Flutter para Windows e adicione a
+pasta `flutter\bin` ao `Path` do usuário. Depois, feche e reabra o PowerShell.
 
 ### 2. Verificar Instalação
 
@@ -136,6 +152,8 @@ No Android Emulator, o aplicativo usa `http://10.0.2.2:8000`; no simulador iOS e
 python3 --version  # Deve ser 3.11+
 ```
 
+No Windows, use `py -3.11 --version`.
+
 Se não tiver Python 3.11+:
 
 **macOS:**
@@ -148,32 +166,51 @@ brew install python@3.11
 sudo apt install python3.11 python3.11-venv
 ```
 
+**Windows:** instale pelo [site oficial do Python](https://www.python.org/downloads/)
+ou pelo PowerShell:
+
+```powershell
+winget install --id Python.Python.3.11 -e
+```
+
 ### 2. Criar Ambiente Virtual
+
+macOS/Linux:
 
 ```bash
 cd ~/Documents/projeto/movere
 python3 -m venv backend/.venv
+source backend/.venv/bin/activate
+```
 
-# Ativar
-source backend/.venv/bin/activate  # macOS/Linux
-# ou
-backend\.venv\Scripts\activate     # Windows
+Windows PowerShell, a partir da raiz do repositório:
+
+```powershell
+py -3.11 -m venv backend\.venv
+.\backend\.venv\Scripts\Activate.ps1
 ```
 
 Você verá `(.venv)` no terminal.
 
+Se o PowerShell bloquear o script de ativação, permita-o somente na sessão
+atual com `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` e tente
+ativar novamente.
+
 ### 3. Dependências
 
-As dependências executáveis estão versionadas em `backend/requirements.txt`. As ferramentas de teste estão em `backend/requirements-dev.txt`. Bibliotecas de visão computacional, Firebase e relatórios serão adicionadas somente nas fases correspondentes.
+As dependências executáveis estão versionadas em `backend/requirements.txt`.
+As ferramentas de desenvolvimento e teste estão em
+`backend/requirements-dev.txt`, que também instala as dependências executáveis.
 
 ### 4. Instalar Dependências
 
 ```bash
 # Certificar que (.venv) está ativo
-pip install -r requirements-dev.txt
+python -m pip install -r backend/requirements-dev.txt
 ```
 
-Nesta fase são instalados apenas FastAPI, servidor HTTP e ferramentas de teste.
+Esse arquivo instala FastAPI, visão computacional, Firebase, geração de
+relatórios e as ferramentas de teste usadas pelo projeto.
 
 ### 5. Estrutura implementada
 
@@ -206,8 +243,17 @@ uvicorn main:app --reload
 
 Para validar um vídeo real de flexão de cotovelo, agachamento ou pinça:
 
+macOS/Linux:
+
 ```bash
 ANALYSIS_MODE=real python main.py
+```
+
+Windows PowerShell:
+
+```powershell
+$env:ANALYSIS_MODE = "real"
+python main.py
 ```
 
 Valores aceitos para `ANALYSIS_MODE`: `mock` e `real`. Os três exercícios estão
@@ -219,7 +265,8 @@ Documentação Swagger: `http://localhost:8000/docs`
 
 ### 7. Executar o backend com Docker (opcional)
 
-Depois que o `Dockerfile` e o `compose.yaml` forem criados na fase 3, execute a partir da raiz do projeto:
+O `Dockerfile` e o `compose.yaml` já estão incluídos. Execute a partir da raiz
+do projeto:
 
 ```bash
 docker compose up --build backend

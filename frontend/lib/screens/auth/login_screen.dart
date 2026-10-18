@@ -139,10 +139,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(
-                      Icons.accessibility_new,
-                      size: 72,
-                      color: AppColors.primary,
+                    Image.asset(
+                      'assets/branding/movere_mark.png',
+                      height: 112,
+                      fit: BoxFit.contain,
+                      semanticLabel: 'Logotipo do Movere',
                     ),
                     const SizedBox(height: AppSpacing.md),
                     Text(

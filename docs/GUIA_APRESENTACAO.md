@@ -13,6 +13,39 @@ minutos. As credenciais ficam apenas no arquivo local
 - paciente identificado como voluntário saudável para teste técnico;
 - três repetições previstas em cada plano.
 
+## Criar ou restaurar os dados da apresentação
+
+O seed cria, sem duplicar dados, as contas **Maria Oliveira** (paciente) e
+**Dra. Ana Souza** (fisioterapeuta), o vínculo aceito, três planos, sessões
+sintéticas, orientação e mensagens. Os registros gerados permanecem marcados
+como simulados e não representam dados clínicos reais.
+
+macOS/Linux:
+
+```bash
+export MOVERE_SEED_PASSWORD='escolha-uma-senha-forte'
+python3 tools/seed_presentation.py
+unset MOVERE_SEED_PASSWORD
+```
+
+Windows PowerShell:
+
+```powershell
+$env:MOVERE_SEED_PASSWORD = "escolha-uma-senha-forte"
+python tools/seed_presentation.py
+Remove-Item Env:MOVERE_SEED_PASSWORD
+```
+
+A senha nunca é adicionada ao Git. Depois da execução, as credenciais ficam em
+`docs/APRESENTACAO_CREDENCIAIS.md`, arquivo local já ignorado pelo repositório.
+Para reutilizar contas existentes, informe a mesma senha usada na primeira
+execução. Para trocar uma senha esquecida, use a recuperação de senha do app ou
+o Firebase Console.
+
+Se paciente e profissional tiverem senhas diferentes, use
+`MOVERE_PATIENT_PASSWORD` e `MOVERE_THERAPIST_PASSWORD` no lugar de
+`MOVERE_SEED_PASSWORD`.
+
 ## Materiais para levar
 
 - notebook carregado e conectado à energia;

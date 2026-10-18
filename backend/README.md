@@ -17,10 +17,20 @@ O módulo não utiliza critérios clínicos validados e não deve ser interpreta
 
 ## Instalação local
 
+macOS/Linux:
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
+```
+
+Windows PowerShell:
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
 ```
 
 ## Executar
@@ -33,14 +43,33 @@ python main.py
 
 Modo de análise real:
 
+macOS/Linux:
+
 ```bash
 ANALYSIS_MODE=real python main.py
 ```
 
+Windows PowerShell:
+
+```powershell
+$env:ANALYSIS_MODE = "real"
+python main.py
+```
+
 Por padrão, `AUTH_MODE=disabled` permite o desenvolvimento local. Para exigir um token Firebase válido nos endpoints de análise:
+
+macOS/Linux:
 
 ```bash
 AUTH_MODE=firebase FIREBASE_PROJECT_ID=movere-dc610 python main.py
+```
+
+Windows PowerShell:
+
+```powershell
+$env:AUTH_MODE = "firebase"
+$env:FIREBASE_PROJECT_ID = "movere-dc610"
+python main.py
 ```
 
 Essa configuração valida assinatura, projeto, emissor e expiração do token sem armazenar uma chave administrativa. Para também verificar revogação, configure credenciais fora do repositório e use `FIREBASE_CHECK_REVOKED=true`. Em infraestrutura Google, prefira identidade do ambiente. `GET /health` permanece público; análises e relatórios exigem autenticação quando `AUTH_MODE=firebase`.
