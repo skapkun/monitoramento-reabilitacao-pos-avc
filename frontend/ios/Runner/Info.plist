@@ -7,7 +7,7 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>O sistema pode solicitar o microfone durante a gravação de vídeo, embora o áudio não seja analisado.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>O Movere acessa a biblioteca somente quando o usuário escolhe um vídeo para análise.</string>
+	<string>O Movere acessa a biblioteca somente quando você escolhe uma foto de perfil ou um vídeo para análise.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

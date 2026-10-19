@@ -169,6 +169,7 @@ service cloud.firestore {
           'assistiveDevice',
           'participantContext',
           'accessibilityPreferences',
+          'profilePhoto',
           'updatedAt'
         ])
         && request.resource.data.name is string
@@ -209,7 +210,10 @@ service cloud.firestore {
           || (resource.data.role == 'patient'
             && request.resource.data.participantContext in [
               'post_stroke', 'healthy_volunteer', 'not_informed'
-            ]));
+            ]))
+        && (!('profilePhoto' in request.resource.data)
+          || (request.resource.data.profilePhoto is bytes
+            && request.resource.data.profilePhoto.size() <= 90000));
 
       allow delete: if false;
     }

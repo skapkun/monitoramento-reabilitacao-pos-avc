@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../models/user_profile.dart';
 
 class AuthRepositoryException implements Exception {
@@ -54,6 +56,8 @@ abstract interface class AuthRepository {
   Future<void> updateAccessibilityPreferences(
     AccessibilityPreferences preferences,
   );
+
+  Future<UserProfile> updateProfilePhoto(Uint8List bytes);
 }
 
 class DemoAuthRepository implements AuthRepository {
@@ -148,4 +152,8 @@ class DemoAuthRepository implements AuthRepository {
   Future<void> updateAccessibilityPreferences(
     AccessibilityPreferences preferences,
   ) async {}
+
+  @override
+  Future<UserProfile> updateProfilePhoto(Uint8List bytes) async =>
+      MockUsers.patient.copyWith(photoBytes: bytes);
 }

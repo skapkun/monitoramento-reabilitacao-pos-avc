@@ -1,18 +1,26 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../models/user_profile.dart';
 import '../../services/auth_repository.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../widgets/app_page.dart';
+import '../../widgets/editable_profile_photo.dart';
 import '../../widgets/status_banner.dart';
 import '../../widgets/profile_edit_dialog.dart';
 
 class PatientProfileScreen extends StatefulWidget {
-  const PatientProfileScreen({AuthRepository? authRepository, super.key})
-    : authRepository = authRepository ?? const DemoAuthRepository();
+  const PatientProfileScreen({
+    AuthRepository? authRepository,
+    this.photoPicker,
+    super.key,
+  }) : authRepository = authRepository ?? const DemoAuthRepository();
 
   final AuthRepository authRepository;
+  final Future<Uint8List?> Function()? photoPicker;
 
   @override
   State<PatientProfileScreen> createState() => _PatientProfileScreenState();
@@ -23,6 +31,7 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
   bool reducedMotion = false;
   bool repeatInstructions = true;
   bool savingPreferences = false;
+  bool savingPhoto = false;
   late Future<UserProfile?> profile;
 
   @override
@@ -82,6 +91,40 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     ).showSnackBar(const SnackBar(content: Text('Perfil atualizado.')));
   }
 
+  Future<void> _changePhoto() async {
+    final picker = widget.photoPicker ?? _pickPhoto;
+    final bytes = await picker();
+    if (bytes == null || !mounted) return;
+    setState(() => savingPhoto = true);
+    try {
+      final updated = await widget.authRepository.updateProfilePhoto(bytes);
+      if (!mounted) return;
+      setState(() {
+        profile = Future.value(updated);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto de perfil atualizada.')),
+      );
+    } on AuthRepositoryException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) setState(() => savingPhoto = false);
+    }
+  }
+
+  Future<Uint8List?> _pickPhoto() async {
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 60,
+    );
+    return file?.readAsBytes();
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppPage(
@@ -112,14 +155,13 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
     children: [
       Row(
         children: [
-          CircleAvatar(
+          EditableProfilePhoto(
             radius: 36,
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            child: Text(
-              _initials(user.name),
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
+            initials: _initials(user.name),
+            photoBytes: user.photoBytes,
+            enabled: !widget.authRepository.isDemo,
+            saving: savingPhoto,
+            onEdit: _changePhoto,
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(

@@ -161,6 +161,15 @@ class PatientHomeScreen extends StatelessWidget {
 class _MotivationalMessage extends StatelessWidget {
   const _MotivationalMessage();
 
+  static const messages = [
+    'Cada movimento conta. Faça no seu ritmo e respeite seus limites.',
+    'Hoje, faça o que for confortável para você.',
+    'Vá com calma. Cuidar do seu ritmo também faz parte.',
+    'Um passo de cada vez, sempre com segurança.',
+    'Concentre-se no movimento e respeite os sinais do seu corpo.',
+    'Seu esforço de hoje merece ser reconhecido.',
+  ];
+
   @override
   Widget build(BuildContext context) => Semantics(
     container: true,
@@ -171,15 +180,16 @@ class _MotivationalMessage extends StatelessWidget {
         color: AppColors.accentSoft,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.favorite_outline, color: AppColors.accent),
-          SizedBox(width: AppSpacing.sm),
+          const Icon(Icons.favorite_outline, color: AppColors.accent),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
-              'Cada movimento conta. Faça no seu ritmo e respeite seus limites.',
-              style: TextStyle(
+              messages[DateTime.now().day % messages.length],
+              key: const Key('mensagem_motivacional'),
+              style: const TextStyle(
                 color: AppColors.accent,
                 fontWeight: FontWeight.w700,
               ),

@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movere_app/models/user_profile.dart';
@@ -11,6 +14,7 @@ class RecordingAuthRepository implements AuthRepository {
   final UserRole role;
   AccessibilityPreferences? savedPreferences;
   UserProfile? updatedProfile;
+  Uint8List? updatedPhoto;
 
   @override
   bool get isDemo => false;
@@ -89,6 +93,12 @@ class RecordingAuthRepository implements AuthRepository {
       participantContext: participantContext ?? 'not_informed',
     );
     return updatedProfile!;
+  }
+
+  @override
+  Future<UserProfile> updateProfilePhoto(Uint8List bytes) async {
+    updatedPhoto = bytes;
+    return (await currentProfile())!.copyWith(photoBytes: bytes);
   }
 
   @override
@@ -183,5 +193,49 @@ void main() {
       'CREFITO 200-F',
     );
     expect(find.textContaining('CREFITO 200-F'), findsOneWidget);
+  });
+
+  testWidgets('altera a foto do perfil do paciente', (tester) async {
+    final repository = RecordingAuthRepository();
+    final photo = base64Decode(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PatientProfileScreen(
+          authRepository: repository,
+          photoPicker: () async => photo,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('alterar_foto_perfil')));
+    await tester.pumpAndSettle();
+
+    expect(repository.updatedPhoto, photo);
+    expect(find.text('Foto de perfil atualizada.'), findsOneWidget);
+  });
+
+  testWidgets('altera a foto do perfil profissional', (tester) async {
+    final repository = RecordingAuthRepository(role: UserRole.therapist);
+    final photo = base64Decode(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: TherapistProfileScreen(
+          authRepository: repository,
+          photoPicker: () async => photo,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('alterar_foto_perfil')));
+    await tester.pumpAndSettle();
+
+    expect(repository.updatedPhoto, photo);
+    expect(find.text('Foto de perfil atualizada.'), findsOneWidget);
   });
 }

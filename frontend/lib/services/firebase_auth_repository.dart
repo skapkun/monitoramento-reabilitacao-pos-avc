@@ -225,6 +225,7 @@ class FirebaseAuthRepository implements AuthRepository {
         assistiveDevice: normalizedAssistiveDevice,
         participantContext: normalizedParticipantContext,
         accessibilityPreferences: current.accessibilityPreferences,
+        photoBytes: current.photoBytes,
       );
     } on FirebaseException {
       throw const AuthRepositoryException(
@@ -286,6 +287,38 @@ class FirebaseAuthRepository implements AuthRepository {
     }
   }
 
+  @override
+  Future<UserProfile> updateProfilePhoto(Uint8List bytes) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw const AuthRepositoryException(
+        'Sua sessão expirou. Entre novamente.',
+      );
+    }
+    if (bytes.isEmpty || bytes.lengthInBytes > 90000) {
+      throw const AuthRepositoryException(
+        'Escolha uma foto menor para continuar.',
+      );
+    }
+    try {
+      await _firestore.collection('users').doc(user.uid).update({
+        'profilePhoto': Blob(bytes),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      final updated = await _profileFor(user.uid);
+      if (updated == null) {
+        throw const AuthRepositoryException('Perfil não encontrado.');
+      }
+      return updated;
+    } on AuthRepositoryException {
+      rethrow;
+    } on FirebaseException {
+      throw const AuthRepositoryException(
+        'Não foi possível salvar a foto. Tente novamente.',
+      );
+    }
+  }
+
   Future<UserProfile?> _profileFor(String uid) async {
     final snapshot = await _firestore.collection('users').doc(uid).get();
     final data = snapshot.data();
@@ -320,6 +353,9 @@ class FirebaseAuthRepository implements AuthRepository {
             ? Map<String, dynamic>.from(data['accessibilityPreferences'] as Map)
             : null,
       ),
+      photoBytes: data['profilePhoto'] is Blob
+          ? (data['profilePhoto'] as Blob).bytes
+          : null,
     );
     accessibilityPreferences.value = profile.accessibilityPreferences;
     return profile;

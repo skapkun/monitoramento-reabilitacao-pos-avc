@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 enum UserRole { patient, therapist }
 
 class AccessibilityPreferences {
@@ -55,6 +57,7 @@ class UserProfile {
     this.assistiveDevice,
     this.participantContext = 'not_informed',
     this.accessibilityPreferences = const AccessibilityPreferences(),
+    this.photoBytes,
   });
 
   final String? id;
@@ -72,6 +75,7 @@ class UserProfile {
   final String? assistiveDevice;
   final String participantContext;
   final AccessibilityPreferences accessibilityPreferences;
+  final Uint8List? photoBytes;
 
   UserProfile copyWith({
     String? name,
@@ -86,6 +90,7 @@ class UserProfile {
     String? assistiveDevice,
     String? participantContext,
     AccessibilityPreferences? accessibilityPreferences,
+    Uint8List? photoBytes,
   }) => UserProfile(
     id: id,
     name: name ?? this.name,
@@ -104,6 +109,7 @@ class UserProfile {
     participantContext: participantContext ?? this.participantContext,
     accessibilityPreferences:
         accessibilityPreferences ?? this.accessibilityPreferences,
+    photoBytes: photoBytes ?? this.photoBytes,
   );
 }
 

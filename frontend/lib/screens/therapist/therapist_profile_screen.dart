@@ -1,18 +1,26 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../models/user_profile.dart';
 import '../../services/auth_repository.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../widgets/app_page.dart';
+import '../../widgets/editable_profile_photo.dart';
 import '../../widgets/profile_edit_dialog.dart';
 import '../../widgets/status_banner.dart';
 
 class TherapistProfileScreen extends StatefulWidget {
-  const TherapistProfileScreen({AuthRepository? authRepository, super.key})
-    : authRepository = authRepository ?? const DemoAuthRepository();
+  const TherapistProfileScreen({
+    AuthRepository? authRepository,
+    this.photoPicker,
+    super.key,
+  }) : authRepository = authRepository ?? const DemoAuthRepository();
 
   final AuthRepository authRepository;
+  final Future<Uint8List?> Function()? photoPicker;
 
   @override
   State<TherapistProfileScreen> createState() => _TherapistProfileScreenState();
@@ -20,6 +28,7 @@ class TherapistProfileScreen extends StatefulWidget {
 
 class _TherapistProfileScreenState extends State<TherapistProfileScreen> {
   late Future<UserProfile?> profile;
+  bool savingPhoto = false;
 
   @override
   void initState() {
@@ -42,6 +51,40 @@ class _TherapistProfileScreenState extends State<TherapistProfileScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Perfil atualizado.')));
+  }
+
+  Future<void> _changePhoto() async {
+    final picker = widget.photoPicker ?? _pickPhoto;
+    final bytes = await picker();
+    if (bytes == null || !mounted) return;
+    setState(() => savingPhoto = true);
+    try {
+      final updated = await widget.authRepository.updateProfilePhoto(bytes);
+      if (!mounted) return;
+      setState(() {
+        profile = Future.value(updated);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto de perfil atualizada.')),
+      );
+    } on AuthRepositoryException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) setState(() => savingPhoto = false);
+    }
+  }
+
+  Future<Uint8List?> _pickPhoto() async {
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 60,
+    );
+    return file?.readAsBytes();
   }
 
   @override
@@ -72,13 +115,14 @@ class _TherapistProfileScreenState extends State<TherapistProfileScreen> {
   Widget _content(BuildContext context, UserProfile user) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      CircleAvatar(
-        radius: 44,
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        child: Text(
-          _initials(user.name),
-          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+      Align(
+        child: EditableProfilePhoto(
+          radius: 44,
+          initials: _initials(user.name),
+          photoBytes: user.photoBytes,
+          enabled: !widget.authRepository.isDemo,
+          saving: savingPhoto,
+          onEdit: _changePhoto,
         ),
       ),
       const SizedBox(height: AppSpacing.md),
