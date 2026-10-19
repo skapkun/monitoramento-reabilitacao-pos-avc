@@ -251,7 +251,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                                       children: [
                                         Icon(
                                           patient.requiresReview
-                                              ? Icons.warning_amber
+                                              ? Icons.rate_review_outlined
                                               : Icons.check_circle_outline,
                                           size: 20,
                                           color: patient.requiresReview
@@ -276,7 +276,7 @@ class _PatientsScreenState extends State<PatientsScreen> {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   const Icon(
-                                                    Icons.priority_high,
+                                                    Icons.info_outline,
                                                     size: 20,
                                                     color:
                                                         AppColors.warningText,

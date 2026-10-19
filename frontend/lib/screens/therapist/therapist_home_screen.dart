@@ -139,7 +139,7 @@ class _DashboardOverview extends StatelessWidget {
               MetricCard(
                 label: 'Precisam de atenção',
                 value: '$attention',
-                icon: Icons.priority_high,
+                icon: Icons.visibility_outlined,
                 color: AppColors.warningText,
                 backgroundColor: AppColors.warningBackground,
                 compact: true,
@@ -159,7 +159,7 @@ class _DashboardOverview extends StatelessWidget {
               MetricCard(
                 label: 'Sessões para revisar',
                 value: '${summary.requiresReview}',
-                icon: Icons.warning_amber,
+                icon: Icons.rate_review_outlined,
                 color: AppColors.warningText,
                 backgroundColor: AppColors.warningBackground,
                 compact: true,
@@ -181,7 +181,7 @@ class _DashboardOverview extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           StatusBanner(
             icon: attention > 0
-                ? Icons.notification_important_outlined
+                ? Icons.fact_check_outlined
                 : Icons.check_circle_outline,
             title: attention > 0
                 ? 'Prioridades de acompanhamento'

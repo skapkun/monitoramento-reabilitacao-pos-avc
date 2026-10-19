@@ -51,7 +51,7 @@ class SessionList extends StatelessWidget {
                   minVerticalPadding: AppSpacing.md,
                   leading: Icon(
                     session.requiresReview
-                        ? Icons.warning_amber
+                        ? Icons.rate_review_outlined
                         : Icons.event_available_outlined,
                     color: session.requiresReview
                         ? AppColors.warningText

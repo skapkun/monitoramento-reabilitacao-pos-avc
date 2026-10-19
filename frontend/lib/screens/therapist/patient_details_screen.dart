@@ -200,7 +200,7 @@ class PatientDetailsScreen extends StatelessWidget {
           ] else
             StatusBanner(
               icon: data.requiresReview
-                  ? Icons.warning_amber
+                  ? Icons.rate_review_outlined
                   : Icons.check_circle_outline,
               title: data.status,
               message: data.requiresReview
