@@ -10,7 +10,7 @@ minutos. As credenciais ficam apenas no arquivo local
 
 ## O que já está preparado
 
-- conta de paciente de apresentação;
+- quatro contas fictícias de pacientes vinculadas ao profissional;
 - conta de fisioterapeuta de apresentação;
 - vínculo entre as duas contas aceito;
 - planos ativos de flexão de cotovelo, agachamento e pinça;
@@ -19,10 +19,12 @@ minutos. As credenciais ficam apenas no arquivo local
 
 ## Criar ou restaurar os dados da apresentação
 
-O seed cria, sem duplicar dados, as contas **Maria Oliveira** (paciente) e
-**Dra. Ana Souza** (fisioterapeuta), o vínculo aceito, três planos, sessões
-sintéticas, orientação e mensagens. Os registros gerados permanecem marcados
-como simulados e não representam dados clínicos reais.
+O seed cria, sem duplicar dados, a conta **Dra. Ana Souza** (fisioterapeuta) e
+quatro pacientes fictícios: **Maria Oliveira**, **João Pereira**, **Lúcia
+Santos** e **Carla Mendes**. Também prepara vínculos aceitos, planos e cenários
+variados de acompanhamento, além de sessões sintéticas, orientação e mensagens.
+Os registros gerados permanecem marcados como simulados e não representam dados
+clínicos reais.
 
 macOS/Linux:
 

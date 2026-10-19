@@ -24,6 +24,11 @@ PROJECT_ID = "movere-dc610"
 DEFAULT_API_KEY = "AIzaSyD_7LrlT3Nch2_sI95YW-QtenVJXjWcE3g"
 PATIENT_EMAIL = "paciente.apresentacao@movere.app"
 THERAPIST_EMAIL = "profissional.apresentacao@movere.app"
+SECONDARY_PATIENTS = (
+    ("João Pereira", "joao.apresentacao@movere.app", "joao-pereira"),
+    ("Lúcia Santos", "lucia.apresentacao@movere.app", "lucia-santos"),
+    ("Carla Mendes", "carla.apresentacao@movere.app", "carla-mendes"),
+)
 CREDENTIALS_PATH = Path(__file__).resolve().parents[1] / "docs" / "APRESENTACAO_CREDENCIAIS.md"
 
 
@@ -294,6 +299,44 @@ def ensure_profile(
     client.update_fields(path, mutable, token)
 
 
+def ensure_link(
+    client: FirebaseClient,
+    *,
+    patient: dict[str, str],
+    therapist: dict[str, str],
+    now: datetime,
+) -> None:
+    link_path = f"careLinks/{therapist['uid']}_{patient['uid']}"
+    created = client.create_if_missing(
+        link_path,
+        {
+            "therapistId": therapist["uid"],
+            "therapistName": "Dra. Ana Souza",
+            "patientId": patient["uid"],
+            "status": "pending",
+            "createdAt": now,
+            "updatedAt": now,
+        },
+        therapist["token"],
+        blind=True,
+    )
+    if created:
+        status = "pending"
+    else:
+        link = client.get(link_path, therapist["token"])
+        assert link is not None
+        status = link.get("fields", {}).get("status", {}).get("stringValue")
+    if status == "rejected":
+        client.update_fields(
+            link_path, {"status": "pending", "updatedAt": now}, therapist["token"]
+        )
+        status = "pending"
+    if status == "pending":
+        client.update_fields(
+            link_path, {"status": "accepted", "updatedAt": now}, patient["token"]
+        )
+
+
 def write_local_credentials(patient_password: str, therapist_password: str) -> None:
     content = f"""# Credenciais locais da apresentação
 
@@ -340,35 +383,7 @@ def seed(
     )
     print("Perfil profissional preparado.")
 
-    link_path = f"careLinks/{therapist['uid']}_{patient['uid']}"
-    created_link = client.create_if_missing(
-        link_path,
-        {
-            "therapistId": therapist["uid"],
-            "therapistName": "Dra. Ana Souza",
-            "patientId": patient["uid"],
-            "status": "pending",
-            "createdAt": now,
-            "updatedAt": now,
-        },
-        therapist["token"],
-        blind=True,
-    )
-    if created_link:
-        status = "pending"
-    else:
-        link = client.get(link_path, therapist["token"])
-        assert link is not None
-        status = link.get("fields", {}).get("status", {}).get("stringValue")
-    if status == "rejected":
-        client.update_fields(
-            link_path, {"status": "pending", "updatedAt": now}, therapist["token"]
-        )
-        status = "pending"
-    if status == "pending":
-        client.update_fields(
-            link_path, {"status": "accepted", "updatedAt": now}, patient["token"]
-        )
+    ensure_link(client, patient=patient, therapist=therapist, now=now)
     print("Vínculo preparado.")
 
     plan_specs = [
@@ -480,6 +495,94 @@ def seed(
         blind=True,
     )
     print("Mensagem profissional preparada.")
+
+    secondary_records = []
+    for index, (name, email, slug) in enumerate(SECONDARY_PATIENTS):
+        secondary = client.authenticate(email, patient_password)
+        profile = profile_data(name=name, email=email, role="patient", now=now)
+        profile.update(
+            {
+                "phone": f"(69) 99999-10{index + 2:02d}",
+                "affectedSide": "left" if index == 0 else "right",
+                "strokeType": "ischemic" if index != 1 else "hemorrhagic",
+                "mobility": "with_support" if index < 2 else "independent",
+                "ageRange": ("60_69", "70_79", "50_59")[index],
+                "monthsSinceStroke": (14, 26, 10)[index],
+                "dominantSide": "right",
+                "assistiveDevice": ("cane", "walker", "none")[index],
+                "participantContext": "post_stroke",
+            }
+        )
+        ensure_profile(
+            client,
+            uid=secondary["uid"],
+            token=secondary["token"],
+            data=profile,
+        )
+        ensure_link(client, patient=secondary, therapist=therapist, now=now)
+        client.create_if_missing(
+            f"plans/{secondary['uid']}_elbow_flexion",
+            {
+                "patientId": secondary["uid"],
+                "therapistId": therapist["uid"],
+                "exerciseType": "elbow_flexion",
+                "title": "Flexão de cotovelo",
+                "instructions": "Execute devagar e mantenha o braço inteiro visível.",
+                "sessionsPerWeek": 3,
+                "targetRepetitions": 3,
+                "version": 1,
+                "sets": 1,
+                "targetAmplitudeDegrees": 95.0,
+                "trainingSide": "right",
+                "cadenceSeconds": 2.0,
+                "restSeconds": 60,
+                "customDetectionEnabled": False,
+                "detectionStartThreshold": None,
+                "detectionChangeThreshold": None,
+                "calibrationReason": None,
+                "startDate": now - timedelta(days=14),
+                "endDate": now + timedelta(days=30),
+                "active": True,
+                "updatedAt": now,
+            },
+            therapist["token"],
+            blind=True,
+        )
+        secondary_records.append((secondary, slug))
+
+    # João mostra baixa frequência e uma sessão para revisão; Lúcia ainda não
+    # iniciou; Carla mostra acompanhamento regular.
+    joao, joao_slug = secondary_records[0]
+    client.create_if_missing(
+        f"sessions/apresentacao-{joao_slug}-1-{joao['uid']}",
+        session_data(
+            joao["uid"],
+            now - timedelta(days=6),
+            exercise_type="elbow_flexion",
+            repetitions=2,
+            amplitude=78.0,
+            confidence=0.72,
+            requires_review=True,
+        ),
+        joao["token"],
+        blind=True,
+    )
+    carla, carla_slug = secondary_records[2]
+    for number, days in enumerate((1, 3, 5), start=1):
+        client.create_if_missing(
+            f"sessions/apresentacao-{carla_slug}-{number}-{carla['uid']}",
+            session_data(
+                carla["uid"],
+                now - timedelta(days=days),
+                exercise_type="elbow_flexion",
+                repetitions=3,
+                amplitude=96.0 + number,
+                confidence=0.9,
+            ),
+            carla["token"],
+            blind=True,
+        )
+    print("Três pacientes adicionais e cenários de acompanhamento preparados.")
 
     write_local_credentials(patient_password, therapist_password)
     print("Seed concluído com dados sintéticos de apresentação.")
