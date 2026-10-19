@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""Popula Firebase Auth e Firestore com dados sintéticos de apresentação.
-
-O script usa somente APIs públicas do Firebase e as regras versionadas do
-aplicativo. Nenhuma credencial administrativa é necessária ou armazenada.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -550,8 +544,6 @@ def seed(
         )
         secondary_records.append((secondary, slug))
 
-    # João mostra baixa frequência e uma sessão para revisão; Lúcia ainda não
-    # iniciou; Carla mostra acompanhamento regular.
     joao, joao_slug = secondary_records[0]
     client.create_if_missing(
         f"sessions/apresentacao-{joao_slug}-1-{joao['uid']}",
