@@ -22,6 +22,7 @@ abstract interface class ClinicalRepository {
   Stream<List<ProfessionalNote>> watchNotes(String patientId);
   Stream<List<ProfessionalNote>> watchMyOrientations();
   Stream<List<CareMessage>> watchMessages({String? patientId});
+  Stream<List<CareMessage>> watchAllMessages();
   Stream<DashboardSummary> watchDashboard();
 
   Future<void> requestPatientLink(String patientId);
@@ -164,6 +165,30 @@ class DemoClinicalRepository implements ClinicalRepository {
       senderRole: 'therapist',
       text: 'Mantenha o cotovelo próximo ao corpo e faça sem sentir dor.',
       createdAt: DateTime(2026, 10, 5, 10, 5),
+    ),
+  ]);
+
+  @override
+  Stream<List<CareMessage>> watchAllMessages() => Stream.value([
+    CareMessage(
+      id: 'demo-inbox-1',
+      patientId: 'demo-patient-joao',
+      therapistId: 'demo-therapist',
+      senderId: 'demo-patient-joao',
+      senderRole: 'patient',
+      text: 'Tive dificuldade para completar o movimento hoje.',
+      category: 'could_not_complete',
+      createdAt: DateTime(2026, 10, 18, 15, 20),
+    ),
+    CareMessage(
+      id: 'demo-inbox-2',
+      patientId: 'demo-patient',
+      therapistId: 'demo-therapist',
+      senderId: 'demo-patient',
+      senderRole: 'patient',
+      text: 'Posso realizar os movimentos mais devagar?',
+      category: 'movement_question',
+      createdAt: DateTime(2026, 10, 18, 14, 10),
     ),
   ]);
 

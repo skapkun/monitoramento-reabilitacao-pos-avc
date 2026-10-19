@@ -226,6 +226,14 @@ class FirebaseClinicalRepository implements ClinicalRepository {
   }
 
   @override
+  Stream<List<CareMessage>> watchAllMessages() => _firestore
+      .collection('messages')
+      .where('participants', arrayContains: _uid)
+      .orderBy('createdAt')
+      .snapshots()
+      .map((snapshot) => snapshot.docs.map(_messageFrom).toList());
+
+  @override
   Stream<DashboardSummary> watchDashboard() => watchLinkedPatients().asyncMap((
     patients,
   ) async {

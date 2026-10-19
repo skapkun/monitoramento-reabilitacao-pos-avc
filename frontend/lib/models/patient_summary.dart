@@ -88,6 +88,7 @@ abstract final class MockPatients {
       participantContext: 'post_stroke',
     ),
     PatientSummary(
+      id: 'demo-patient-joao',
       name: 'João Pereira',
       initials: 'JP',
       lastSession: 'Ontem, 16:10',
@@ -104,6 +105,7 @@ abstract final class MockPatients {
       ],
     ),
     PatientSummary(
+      id: 'demo-patient-lucia',
       name: 'Lúcia Santos',
       initials: 'LS',
       lastSession: 'Sem sessões registradas',

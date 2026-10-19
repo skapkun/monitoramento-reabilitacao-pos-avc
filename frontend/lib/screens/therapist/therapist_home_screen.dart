@@ -4,6 +4,7 @@ import '../../routes/app_routes.dart';
 import '../../services/auth_repository.dart';
 import '../../services/clinical_repository.dart';
 import '../../models/clinical_data.dart';
+import '../../models/patient_summary.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/portuguese_text.dart';
@@ -61,6 +62,8 @@ class TherapistHomeScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             _DashboardOverview(repository: clinicalRepository),
             const SizedBox(height: AppSpacing.md),
+            _MessageInbox(repository: clinicalRepository),
+            const SizedBox(height: AppSpacing.md),
             OutlinedButton.icon(
               onPressed: () =>
                   Navigator.pushNamed(context, AppRoutes.analysisMethod),
@@ -75,6 +78,115 @@ class TherapistHomeScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _MessageInbox extends StatelessWidget {
+  const _MessageInbox({required this.repository});
+
+  final ClinicalRepository repository;
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<List<PatientSummary>>(
+    stream: repository.watchLinkedPatients(),
+    builder: (context, patientSnapshot) => StreamBuilder<List<CareMessage>>(
+      stream: repository.watchAllMessages(),
+      builder: (context, messageSnapshot) {
+        if (patientSnapshot.hasError || messageSnapshot.hasError) {
+          return const SizedBox.shrink();
+        }
+        if (!patientSnapshot.hasData || !messageSnapshot.hasData) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(AppSpacing.md),
+              child: LinearProgressIndicator(),
+            ),
+          );
+        }
+        final patients = {
+          for (final patient in patientSnapshot.data!) patient.id: patient,
+        };
+        final unread =
+            messageSnapshot.data!
+                .where(
+                  (message) =>
+                      message.senderRole == 'patient' &&
+                      message.readAt == null &&
+                      patients.containsKey(message.patientId),
+                )
+                .toList()
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Badge(
+                      isLabelVisible: unread.isNotEmpty,
+                      label: Text('${unread.length}'),
+                      child: const Icon(
+                        Icons.mark_unread_chat_alt_outlined,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        'Mensagens de pacientes',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                if (unread.isEmpty)
+                  const Text('Nenhuma mensagem nova no momento.')
+                else ...[
+                  Text(
+                    quantity(
+                      unread.length,
+                      'mensagem não lida',
+                      'mensagens não lidas',
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  for (final message in unread.take(3))
+                    _InboxMessage(
+                      message: message,
+                      patient: patients[message.patientId]!,
+                    ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+class _InboxMessage extends StatelessWidget {
+  const _InboxMessage({required this.message, required this.patient});
+
+  final CareMessage message;
+  final PatientSummary patient;
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+    key: Key('mensagem_pendente_${message.id}'),
+    contentPadding: EdgeInsets.zero,
+    leading: CircleAvatar(child: Text(patient.initials)),
+    title: Text(patient.name),
+    subtitle: Text(message.text, maxLines: 2, overflow: TextOverflow.ellipsis),
+    trailing: const Icon(Icons.chevron_right),
+    onTap: () => Navigator.pushNamed(
+      context,
+      AppRoutes.therapistMessages,
+      arguments: patient,
+    ),
+  );
 }
 
 class _DashboardOverview extends StatelessWidget {

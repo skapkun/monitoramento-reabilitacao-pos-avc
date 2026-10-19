@@ -205,7 +205,21 @@ void main() {
     expect(find.text('Painel profissional'), findsOneWidget);
     expect(find.text('Pacientes vinculados'), findsOneWidget);
     expect(find.text('Sessões para revisar'), findsOneWidget);
+    await scrollTo(tester, find.text('Mensagens de pacientes'), 300);
+    expect(find.text('Mensagens de pacientes'), findsOneWidget);
+    expect(find.text('2 mensagens não lidas'), findsOneWidget);
     expect(find.text('Pacientes'), findsOneWidget);
+  });
+
+  testWidgets('mensagem no painel abre a conversa do paciente', (tester) async {
+    await tester.pumpWidget(const MovereApp());
+    await enterDemo(tester, const Key('entrar_fisioterapeuta'));
+
+    await scrollTo(tester, find.text('João Pereira'), 300);
+    await tester.tap(find.text('João Pereira'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mensagens — João Pereira'), findsOneWidget);
   });
 
   testWidgets('indicador profissional abre pacientes com filtro aplicado', (
