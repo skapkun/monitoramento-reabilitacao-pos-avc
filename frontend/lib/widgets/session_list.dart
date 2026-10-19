@@ -85,9 +85,12 @@ class SessionList extends StatelessWidget {
                         foreground: AppColors.successSoftText,
                       ),
                       _SummaryChip(
-                        icon: Icons.priority_high,
-                        label:
-                            '${quantity(concerns.length, 'ponto', 'pontos')} de atenção',
+                        icon: concerns.isEmpty
+                            ? Icons.check_circle_outline
+                            : Icons.visibility_outlined,
+                        label: concerns.isEmpty
+                            ? 'Nenhum ponto para conferir'
+                            : '${quantity(concerns.length, 'ponto', 'pontos')} para conferir',
                         background: concerns.isEmpty
                             ? AppColors.surface
                             : AppColors.warningBackground,
@@ -166,9 +169,43 @@ class SessionList extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          'Momentos destacados: ${session.movementEvents.length}',
+                          'Momentos destacados automaticamente',
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          'Confira ${quantity(session.movementEvents.length, 'marcação técnica', 'marcações técnicas')} antes de orientar o paciente.',
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        for (final event in session.movementEvents.take(3))
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.xs,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.schedule_outlined,
+                                  size: 20,
+                                  color: AppColors.warningText,
+                                ),
+                                const SizedBox(width: AppSpacing.xs),
+                                Expanded(
+                                  child: Text(
+                                    '${event.title} — ${_eventTime(event.startSeconds)}\n${event.description}',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (session.movementEvents.length > 3)
+                          Text(
+                            'Mais ${session.movementEvents.length - 3} ${session.movementEvents.length - 3 == 1 ? 'momento destacado' : 'momentos destacados'}.',
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                         if (onReview != null &&
                             session.eventReviews.isNotEmpty) ...[
                           const SizedBox(height: AppSpacing.xs),
@@ -246,6 +283,13 @@ class SessionList extends StatelessWidget {
       : value < 1
       ? value.toStringAsFixed(2)
       : '${value.toStringAsFixed(0)}°';
+
+  static String _eventTime(double seconds) {
+    final totalSeconds = seconds.round().clamp(0, 359999);
+    final minutes = totalSeconds ~/ 60;
+    final remainingSeconds = totalSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
 
   static String _issueLabel(String code) => switch (code) {
     'insufficient_frames' => 'vídeo muito curto',
