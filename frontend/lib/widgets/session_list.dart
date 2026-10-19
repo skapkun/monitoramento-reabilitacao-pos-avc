@@ -12,6 +12,7 @@ class SessionList extends StatelessWidget {
     this.professionalView = false,
     this.onReview,
     this.onOpenVideo,
+    this.onExportPdf,
     super.key,
   });
 
@@ -19,6 +20,7 @@ class SessionList extends StatelessWidget {
   final bool professionalView;
   final Future<void> Function(RehabilitationSession session)? onReview;
   final Future<void> Function(RehabilitationSession session)? onOpenVideo;
+  final Future<void> Function(RehabilitationSession session)? onExportPdf;
 
   @override
   Widget build(BuildContext context) {
@@ -267,6 +269,21 @@ class SessionList extends StatelessWidget {
                             ? 'Assistir vídeo compartilhado'
                             : 'Ver capturas da análise',
                       ),
+                    ),
+                  ),
+                if (onExportPdf != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      0,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                    ),
+                    child: OutlinedButton.icon(
+                      key: Key('pdf_sessao_${session.id}'),
+                      onPressed: () => onExportPdf!(session),
+                      icon: const Icon(Icons.picture_as_pdf_outlined),
+                      label: const Text('Gerar PDF desta sessão'),
                     ),
                   ),
               ],

@@ -86,6 +86,9 @@ class DemoClinicalRepository implements ClinicalRepository {
       repetitions: 8,
       averageAmplitudeDegrees: 92,
       confidence: .86,
+      prescribedSessionsPerWeek: 3,
+      painScore: 2,
+      fatigueScore: 4,
     ),
     RehabilitationSession(
       id: 'demo-2',

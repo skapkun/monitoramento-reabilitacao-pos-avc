@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/clinical_data.dart';
 import '../../models/patient_summary.dart';
 import '../../services/clinical_repository.dart';
+import '../../services/report_api_service.dart';
 import '../../theme/app_spacing.dart';
 import '../../widgets/app_page.dart';
 import '../../widgets/session_list.dart';
@@ -19,6 +20,33 @@ class TherapistSessionsScreen extends StatelessWidget {
 
   final ClinicalRepository repository;
   final PatientSummary? patient;
+
+  Future<void> _exportSession(
+    BuildContext context,
+    PatientSummary patient,
+    RehabilitationSession session,
+  ) async {
+    final service = ReportApiService();
+    try {
+      await service.generateSessionAndShare(
+        patientId: patient.id,
+        patientName: patient.name,
+        session: session,
+      );
+    } on ReportApiException catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível compartilhar o PDF.')),
+      );
+    } finally {
+      service.close();
+    }
+  }
 
   Future<void> _review(
     BuildContext context,
@@ -228,6 +256,8 @@ class TherapistSessionsScreen extends StatelessWidget {
                       sessions: snapshot.data!,
                       professionalView: true,
                       onReview: (session) => _review(context, session),
+                      onExportPdf: (session) =>
+                          _exportSession(context, selected, session),
                       onOpenVideo: (session) async {
                         await Navigator.push<void>(
                           context,

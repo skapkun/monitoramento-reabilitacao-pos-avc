@@ -56,6 +56,11 @@ void main() {
     expect(find.text('Resumo do seu progresso'), findsOneWidget);
     expect(find.text('Sessões'), findsOneWidget);
     expect(find.text('Média de repetições'), findsOneWidget);
+    expect(find.text('Repetições ao longo do tempo'), findsOneWidget);
+    expect(find.text('Amplitude média observada'), findsOneWidget);
+    expect(find.text('Adesão semanal registrada'), findsOneWidget);
+    expect(find.text('Dor relatada após a sessão'), findsOneWidget);
+    expect(find.text('Cansaço relatado após a sessão'), findsOneWidget);
   });
 
   testWidgets('relatório resume sessões do paciente', (tester) async {
@@ -195,6 +200,32 @@ void main() {
 
     await tester.tap(find.text('Assistir vídeo compartilhado'));
     expect(opened, isTrue);
+  });
+
+  testWidgets('profissional pode gerar PDF de uma sessão', (tester) async {
+    var exported = false;
+    final session = RehabilitationSession(
+      id: 'session-pdf',
+      patientId: 'patient',
+      exerciseType: 'squat',
+      status: 'completed',
+      createdAt: DateTime(2026, 10, 18),
+      repetitions: 3,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SessionList(
+            sessions: [session],
+            professionalView: true,
+            onExportPdf: (_) async => exported = true,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Gerar PDF desta sessão'));
+    expect(exported, isTrue);
   });
 
   testWidgets('paciente vê somente observação confirmada e compartilhada', (

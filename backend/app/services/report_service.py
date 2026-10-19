@@ -12,10 +12,89 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from app.schemas.report import LongitudinalReportRequest
+from app.schemas.report import LongitudinalReportRequest, SessionReportRequest
 
 
 class ReportService:
+    def session_pdf(self, request: SessionReportRequest) -> bytes:
+        session = request.session
+        longitudinal = LongitudinalReportRequest(
+            patient_name=request.patient_name,
+            patient_id=request.patient_id,
+            sessions=[session],
+        )
+        output = BytesIO()
+        document = SimpleDocTemplate(
+            output,
+            pagesize=A4,
+            rightMargin=1.6 * cm,
+            leftMargin=1.6 * cm,
+            topMargin=1.6 * cm,
+            bottomMargin=1.6 * cm,
+            title="Relatório de sessão Movere",
+            author="Movere",
+        )
+        styles = getSampleStyleSheet()
+        story = [
+            Paragraph("Relatório individual da sessão — Movere", styles["Title"]),
+            Spacer(1, 0.4 * cm),
+            Paragraph(f"Paciente: <b>{escape(request.patient_name)}</b>", styles["BodyText"]),
+            Paragraph(
+                f"Data: {session.date.astimezone().strftime('%d/%m/%Y %H:%M')}",
+                styles["BodyText"],
+            ),
+            Paragraph(f"Exercício: {escape(session.exercise)}", styles["BodyText"]),
+            Paragraph(f"Status: {escape(session.status)}", styles["BodyText"]),
+            Spacer(1, 0.5 * cm),
+            Paragraph("Resultado e prescrição", styles["Heading2"]),
+            Table(
+                [
+                    ["Repetições", "Amplitude", "Duração média", "Relato"],
+                    [
+                        self._repetitions_summary(session),
+                        self._amplitude_summary(session),
+                        "—" if session.average_duration_seconds is None else f"{session.average_duration_seconds:.2f}s",
+                        self._subjective_summary(session),
+                    ],
+                ],
+                colWidths=[3.3 * cm, 4.2 * cm, 3.3 * cm, 5.2 * cm],
+                style=self._compact_table_style(),
+            ),
+            Spacer(1, 0.6 * cm),
+            Paragraph("Métricas técnicas e revisão profissional", styles["Heading2"]),
+            self._technical_metrics_table(longitudinal),
+            Spacer(1, 0.6 * cm),
+            Paragraph("Momentos técnicos destacados", styles["Heading2"]),
+            self._movement_events_table(longitudinal),
+            Spacer(1, 0.6 * cm),
+            Paragraph("Capturas técnicas autorizadas", styles["Heading2"]),
+            *self._evidence_content(longitudinal),
+            Spacer(1, 0.6 * cm),
+            Paragraph("Orientação profissional", styles["Heading2"]),
+            self._professional_comments_table(longitudinal),
+            Spacer(1, 0.6 * cm),
+            Paragraph(
+                "Documento descritivo de uma sessão, gerado por protótipo acadêmico. "
+                "Não constitui laudo, diagnóstico ou avaliação clínica.",
+                styles["Italic"],
+            ),
+        ]
+        document.build(story)
+        return output.getvalue()
+
+    @staticmethod
+    def _compact_table_style() -> TableStyle:
+        return TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#145C63")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#B8C4C6")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ]
+        )
+
     def longitudinal_pdf(self, request: LongitudinalReportRequest) -> bytes:
         output = BytesIO()
         document = SimpleDocTemplate(

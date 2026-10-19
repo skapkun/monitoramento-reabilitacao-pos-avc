@@ -88,3 +88,33 @@ def test_generates_longitudinal_pdf() -> None:
     assert response.headers["content-type"] == "application/pdf"
     assert response.content.startswith(b"%PDF")
     assert len(response.content) > 5000
+
+
+def test_generates_individual_session_pdf() -> None:
+    app = create_app()
+    app.dependency_overrides[require_authenticated_user] = authenticated_user
+    client = TestClient(app)
+    response = client.post(
+        "/reports/session.pdf",
+        json={
+            "patient_name": "Paciente Teste",
+            "patient_id": "patient-1",
+            "session": {
+                "date": datetime(2026, 10, 18, tzinfo=timezone.utc).isoformat(),
+                "exercise": "Agachamento",
+                "status": "completed",
+                "repetitions": 3,
+                "average_amplitude_degrees": 96.0,
+                "requires_review": False,
+                "pain_score": 2,
+                "fatigue_score": 3,
+                "professional_rating": 4,
+                "review_comment": "Manter o movimento confortável.",
+            },
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert "movere-sessao.pdf" in response.headers["content-disposition"]
+    assert response.content.startswith(b"%PDF")
+    assert len(response.content) > 2000

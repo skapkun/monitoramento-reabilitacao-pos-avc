@@ -62,3 +62,9 @@ class LongitudinalReportRequest(BaseModel):
     patient_name: str = Field(min_length=2, max_length=120)
     patient_id: str = Field(min_length=2, max_length=160)
     sessions: List[ReportSession] = Field(default_factory=list, max_length=500)
+
+
+class SessionReportRequest(BaseModel):
+    patient_name: str = Field(min_length=2, max_length=120)
+    patient_id: str = Field(min_length=2, max_length=160)
+    session: ReportSession

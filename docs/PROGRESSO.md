@@ -143,6 +143,8 @@ Atualizar este documento ao concluir cada tarefa. Não marcar itens apenas inici
 
 ## Fase 9 — Relatórios
 
+- [x] PDF individual disponível em cada sessão do acompanhamento profissional,
+  com resultado, prescrição, relato, métricas, revisão e evidências autorizadas.
 - [x] PDF longitudinal gerado pelo FastAPI, com gráfico Matplotlib, métricas técnicas, bem-estar e revisão profissional, e compartilhável no aplicativo.
 - [x] PDF inclui a revisão dos momentos destacados e as orientações registradas
   pelo fisioterapeuta, sem transformar achados técnicos em diagnóstico.
@@ -195,11 +197,10 @@ Atualizar este documento ao concluir cada tarefa. Não marcar itens apenas inici
 ## Registro da última etapa concluída
 
 - Data: 18 de outubro de 2026
-- Fase: calibração individual rastreável e revisão final de linguagem.
-- Funcionalidades implementadas: calibração opcional dos limiares por
-  exercício, justificativa profissional, faixas protegidas em três camadas,
-  registro na sessão e no PDF, perfil de voluntário saudável, explicação das
-  métricas no aplicativo e pluralização natural dos textos da interface.
+- Fase: relatórios e visualização longitudinal.
+- Funcionalidades implementadas: PDF individual por sessão e gráficos
+  separados de repetições, amplitude, adesão semanal, dor e cansaço no
+  acompanhamento do paciente e do profissional.
 - Segurança: regras versionadas limitam dados clínicos ao paciente e ao fisioterapeuta com vínculo aceito; o FastAPI valida tokens reais sem exigir chave administrativa na configuração padrão.
 - Testes executados: `flutter analyze`, 96 testes Flutter e 44 testes do
   backend; incluídos testes de acessibilidade, calibração, mensagens, extração
