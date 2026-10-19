@@ -301,12 +301,9 @@ void main() {
     await tester.tap(find.byKey(const Key('continuar_preparacao')));
     await tester.pumpAndSettle();
 
-    for (var index = 0; index < 4; index++) {
-      final item = find.byKey(Key('preparacao_item_$index'));
-      await scrollTo(tester, item, 220);
-      await tester.tap(item);
-      await tester.pump();
-    }
+    await tester.tap(find.byKey(const Key('marcar_todos_preparacao')));
+    await tester.pump();
+    expect(find.text('Desmarcar todos'), findsOneWidget);
     await scrollTo(tester, find.byKey(const Key('iniciar_gravacao')), 300);
     await tester.tap(find.byKey(const Key('iniciar_gravacao')));
     await tester.pumpAndSettle();

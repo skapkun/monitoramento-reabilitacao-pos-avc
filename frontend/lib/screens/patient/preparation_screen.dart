@@ -68,6 +68,15 @@ class _PreparationScreenState extends State<PreparationScreen> {
     setState(() => confirmed[index] = !confirmed[index]);
   }
 
+  void toggleAll() {
+    final value = !isReady;
+    setState(() {
+      for (var index = 0; index < confirmed.length; index++) {
+        confirmed[index] = value;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppPage(
@@ -83,6 +92,15 @@ class _PreparationScreenState extends State<PreparationScreen> {
           Text(
             'Toque em cada cartão quando estiver tudo certo. Se precisar, peça ajuda a alguém.',
             style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          OutlinedButton.icon(
+            key: const Key('marcar_todos_preparacao'),
+            onPressed: toggleAll,
+            icon: Icon(
+              isReady ? Icons.remove_done_outlined : Icons.done_all_outlined,
+            ),
+            label: Text(isReady ? 'Desmarcar todos' : 'Marcar todos'),
           ),
           const SizedBox(height: AppSpacing.lg),
           for (var index = 0; index < items.length; index++)
