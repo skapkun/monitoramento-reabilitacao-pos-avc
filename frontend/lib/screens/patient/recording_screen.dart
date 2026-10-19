@@ -117,7 +117,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
                         setState(() => shareWithTherapist = value ?? false),
               title: const Text('Compartilhar capturas da análise'),
               subtitle: const Text(
-                'Opcional. Serão guardadas até 4 imagens dos momentos importantes para seu fisioterapeuta revisar. O vídeo será apagado após a análise e não poderá ser assistido.',
+                'Opcional. Guarda até 4 imagens para o fisioterapeuta revisar. Não guarda o vídeo completo.',
               ),
               controlAffinity: ListTileControlAffinity.leading,
             ),
@@ -133,7 +133,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
                   : (value) => setState(() => shareFullVideo = value ?? false),
               title: const Text('Compartilhar vídeo completo por 30 dias'),
               subtitle: const Text(
-                'Opcional. O vídeo será criptografado no servidor e poderá ser visto somente por você e pelo fisioterapeuta vinculado. Você poderá apagá-lo antes do prazo.',
+                'Opcional. Somente você e o fisioterapeuta vinculado poderão assistir. Você pode apagar antes dos 30 dias.',
               ),
               controlAffinity: ListTileControlAffinity.leading,
             ),

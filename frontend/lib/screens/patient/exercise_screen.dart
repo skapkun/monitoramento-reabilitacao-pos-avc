@@ -77,11 +77,11 @@ class ExerciseScreen extends StatelessWidget {
                     Text('Lado: ${_side(plan!.trainingSide)}'),
                     if (plan!.targetAmplitudeDegrees != null)
                       Text(
-                        'Movimento esperado: ${plan!.targetAmplitudeDegrees!.toStringAsFixed(0)}° (medida técnica)',
+                        'Referência definida pelo fisioterapeuta: ${plan!.targetAmplitudeDegrees!.toStringAsFixed(0)}°. Não force o movimento para alcançar esse valor.',
                       ),
                     if (plan!.cadenceSeconds != null)
                       Text(
-                        'Faça cada repetição em cerca de ${plan!.cadenceSeconds!.toStringAsFixed(1)} segundos',
+                        'Faça cada movimento devagar, em cerca de ${_seconds(plan!.cadenceSeconds!)}.',
                       ),
                     Text('Intervalo: ${plan!.restSeconds} segundos'),
                     if (plan!.customDetectionEnabled) ...[
@@ -133,7 +133,7 @@ class ExerciseScreen extends StatelessWidget {
             icon: Icons.health_and_safety_outlined,
             title: 'Orientação importante',
             message:
-                'O aplicativo não substitui seu fisioterapeuta e não afirma que o exercício é clinicamente seguro.',
+                'Faça somente o exercício orientado pelo fisioterapeuta. Pare se sentir dor, tontura ou mal-estar.',
             backgroundColor: AppColors.warningBackground,
             foregroundColor: AppColors.warningText,
           ),
@@ -159,4 +159,11 @@ class ExerciseScreen extends StatelessWidget {
     'bilateral' => 'bilateral',
     _ => 'lado acometido',
   };
+
+  String _seconds(double value) {
+    final formatted = value == value.roundToDouble()
+        ? value.toStringAsFixed(0)
+        : value.toStringAsFixed(1).replaceAll('.', ',');
+    return '$formatted ${value == 1 ? 'segundo' : 'segundos'}';
+  }
 }

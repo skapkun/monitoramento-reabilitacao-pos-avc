@@ -109,6 +109,12 @@ void main() {
 
     expect(find.text('Olá, Maria'), findsOneWidget);
     expect(find.text('Olá, paciente'), findsNothing);
+    expect(
+      find.text(
+        'Cada movimento conta. Faça no seu ritmo e respeite seus limites.',
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Rotina'), findsOneWidget);
   });
 

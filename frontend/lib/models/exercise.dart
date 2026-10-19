@@ -36,11 +36,11 @@ abstract final class MockExercises {
   static const squat = Exercise(
     type: 'squat',
     name: 'Agachamento',
-    description: 'Movimento de membros inferiores.',
+    description: 'Movimento de sentar e levantar.',
     instructions: [
-      'Posicione a câmera a aproximadamente 1,5 m, em ângulo oblíquo de 45°.',
-      'Mantenha ombros, quadris, joelhos e tornozelos visíveis.',
-      'Desça e retorne lentamente, respeitando seus limites.',
+      'Coloque a câmera um pouco de lado, mostrando a frente e a lateral do corpo.',
+      'Deixe ombros, quadris, joelhos e pés aparecerem na tela.',
+      'Desça e levante devagar. Não force o movimento.',
       'Interrompa se sentir dor, tontura ou desconforto.',
     ],
     icon: Icons.airline_seat_legroom_reduced,
@@ -50,11 +50,11 @@ abstract final class MockExercises {
   static const pinch = Exercise(
     type: 'pinch',
     name: 'Pinça',
-    description: 'Movimento de aproximação dos dedos.',
+    description: 'Movimento de juntar e afastar os dedos.',
     instructions: [
-      'Posicione a câmera a aproximadamente 40 cm da mão.',
-      'Mantenha polegar e indicador inteiros e bem iluminados.',
-      'Aproxime e afaste as pontas dos dedos lentamente.',
+      'Coloque a câmera perto da mão, a cerca de um palmo de distância.',
+      'Deixe o polegar e o indicador inteiros e bem iluminados.',
+      'Junte e afaste as pontas dos dedos devagar.',
       'Interrompa se sentir dor ou desconforto.',
     ],
     icon: Icons.pan_tool_alt_outlined,

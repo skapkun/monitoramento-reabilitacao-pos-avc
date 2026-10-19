@@ -70,6 +70,8 @@ class PatientHomeScreen extends StatelessWidget {
                 'Seu acompanhamento de hoje',
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
+              const SizedBox(height: AppSpacing.sm),
+              const _MotivationalMessage(),
               if (clinicalRepository.isDemo) ...[
                 const SizedBox(height: AppSpacing.md),
                 const _DemoNotice(),
@@ -154,6 +156,39 @@ class PatientHomeScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _MotivationalMessage extends StatelessWidget {
+  const _MotivationalMessage();
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    container: true,
+    label: 'Mensagem de incentivo',
+    child: Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.accentSoft,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.favorite_outline, color: AppColors.accent),
+          SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'Cada movimento conta. Faça no seu ritmo e respeite seus limites.',
+              style: TextStyle(
+                color: AppColors.accent,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _TodayExerciseCard extends StatelessWidget {
