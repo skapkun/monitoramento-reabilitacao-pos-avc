@@ -226,6 +226,7 @@ class TherapistSessionsScreen extends StatelessWidget {
                     const SizedBox(height: AppSpacing.lg),
                     SessionList(
                       sessions: snapshot.data!,
+                      professionalView: true,
                       onReview: (session) => _review(context, session),
                       onOpenVideo: (session) async {
                         await Navigator.push<void>(

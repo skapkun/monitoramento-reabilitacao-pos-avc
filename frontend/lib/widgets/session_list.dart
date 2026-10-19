@@ -9,12 +9,14 @@ import 'empty_state.dart';
 class SessionList extends StatelessWidget {
   const SessionList({
     required this.sessions,
+    this.professionalView = false,
     this.onReview,
     this.onOpenVideo,
     super.key,
   });
 
   final List<RehabilitationSession> sessions;
+  final bool professionalView;
   final Future<void> Function(RehabilitationSession session)? onReview;
   final Future<void> Function(RehabilitationSession session)? onOpenVideo;
 
@@ -32,7 +34,13 @@ class SessionList extends StatelessWidget {
         final dateLabel =
             '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} às ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
         final successes = _successes(session);
-        final concerns = _concerns(session);
+        final concerns = _concerns(
+          session,
+          includeAutomaticEvents: professionalView,
+        );
+        final visibleEvents = professionalView
+            ? session.movementEvents
+            : _confirmedEventsForPatient(session);
         return Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.md),
           child: Card(
@@ -157,7 +165,7 @@ class SessionList extends StatelessWidget {
                   ),
                 if (_hasPatientResponse(session))
                   _PatientResponsePanel(session: session),
-                if (session.movementEvents.isNotEmpty)
+                if (visibleEvents.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.md,
@@ -169,15 +177,19 @@ class SessionList extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          'Momentos destacados automaticamente',
+                          professionalView
+                              ? 'Momentos destacados automaticamente'
+                              : 'Observações compartilhadas pelo fisioterapeuta',
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          'Confira ${quantity(session.movementEvents.length, 'marcação técnica', 'marcações técnicas')} antes de orientar o paciente.',
+                          professionalView
+                              ? 'Confira ${quantity(visibleEvents.length, 'marcação técnica', 'marcações técnicas')} antes de orientar o paciente.'
+                              : '${quantity(visibleEvents.length, 'observação confirmada', 'observações confirmadas')} durante a revisão profissional.',
                         ),
                         const SizedBox(height: AppSpacing.sm),
-                        for (final event in session.movementEvents.take(3))
+                        for (final event in visibleEvents.take(3))
                           Padding(
                             padding: const EdgeInsets.only(
                               bottom: AppSpacing.xs,
@@ -199,9 +211,9 @@ class SessionList extends StatelessWidget {
                               ],
                             ),
                           ),
-                        if (session.movementEvents.length > 3)
+                        if (visibleEvents.length > 3)
                           Text(
-                            'Mais ${session.movementEvents.length - 3} ${session.movementEvents.length - 3 == 1 ? 'momento destacado' : 'momentos destacados'}.',
+                            'Mais ${visibleEvents.length - 3} ${visibleEvents.length - 3 == 1 ? 'observação' : 'observações'}.',
                             style: const TextStyle(
                               color: AppColors.textSecondary,
                             ),
@@ -335,11 +347,13 @@ class SessionList extends StatelessWidget {
     return values;
   }
 
-  static List<String> _concerns(RehabilitationSession session) {
-    final values = session.movementEvents
-        .map((event) => event.title)
-        .toSet()
-        .toList();
+  static List<String> _concerns(
+    RehabilitationSession session, {
+    required bool includeAutomaticEvents,
+  }) {
+    final values = includeAutomaticEvents
+        ? session.movementEvents.map((event) => event.title).toSet().toList()
+        : <String>[];
     if (session.technicalIssueCode != null) {
       values.add(_issueLabel(session.technicalIssueCode!));
     }
@@ -348,6 +362,18 @@ class SessionList extends StatelessWidget {
     }
     return values;
   }
+
+  static List<MovementEvent> _confirmedEventsForPatient(
+    RehabilitationSession session,
+  ) {
+    if (!session.reviewVisibleToPatient) return const [];
+    return session.movementEvents
+        .where((event) => session.eventReviews[_eventKey(event)] == 'confirmed')
+        .toList();
+  }
+
+  static String _eventKey(MovementEvent event) =>
+      '${event.type}_${(event.startSeconds * 1000).round()}';
 
   static bool _hasPatientResponse(RehabilitationSession session) =>
       session.wellbeingScore != null ||

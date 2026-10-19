@@ -197,6 +197,92 @@ void main() {
     expect(opened, isTrue);
   });
 
+  testWidgets('paciente vê somente observação confirmada e compartilhada', (
+    tester,
+  ) async {
+    const event = MovementEvent(
+      type: 'limited_amplitude',
+      title: 'Amplitude abaixo da referência',
+      description: 'O movimento teve menor amplitude neste instante.',
+      startSeconds: 2,
+      endSeconds: 3,
+      severity: 'attention',
+    );
+    final hiddenSession = RehabilitationSession(
+      id: 'hidden',
+      patientId: 'patient',
+      exerciseType: 'elbow_flexion',
+      status: 'completed',
+      createdAt: DateTime(2026, 10, 11),
+      movementEvents: const [event],
+      eventReviews: const {'limited_amplitude_2000': 'confirmed'},
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: SessionList(sessions: [hiddenSession])),
+      ),
+    );
+    expect(find.text('Amplitude abaixo da referência'), findsNothing);
+    expect(find.text('Nenhum ponto para conferir'), findsOneWidget);
+
+    final sharedSession = RehabilitationSession(
+      id: 'shared',
+      patientId: 'patient',
+      exerciseType: 'elbow_flexion',
+      status: 'completed',
+      createdAt: DateTime(2026, 10, 11),
+      movementEvents: const [event],
+      eventReviews: const {'limited_amplitude_2000': 'confirmed'},
+      reviewVisibleToPatient: true,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: SessionList(sessions: [sharedSession])),
+      ),
+    );
+    expect(
+      find.text('Observações compartilhadas pelo fisioterapeuta'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Amplitude abaixo da referência'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('profissional vê marcações automáticas ainda não revisadas', (
+    tester,
+  ) async {
+    final session = RehabilitationSession(
+      id: 'professional',
+      patientId: 'patient',
+      exerciseType: 'elbow_flexion',
+      status: 'completed',
+      createdAt: DateTime(2026, 10, 11),
+      movementEvents: const [
+        MovementEvent(
+          type: 'limited_amplitude',
+          title: 'Amplitude para conferir',
+          description: 'Marcação automática ainda não revisada.',
+          startSeconds: 2,
+          endSeconds: 3,
+          severity: 'attention',
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SessionList(sessions: [session], professionalView: true),
+        ),
+      ),
+    );
+    expect(find.text('Momentos destacados automaticamente'), findsOneWidget);
+    expect(find.textContaining('Amplitude para conferir'), findsOneWidget);
+  });
+
   testWidgets('prescrição profissional apresenta parâmetros individuais', (
     tester,
   ) async {
