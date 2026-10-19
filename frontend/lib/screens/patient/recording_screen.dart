@@ -106,6 +106,16 @@ class _RecordingScreenState extends State<RecordingScreen> {
             foregroundColor: AppColors.primarySoftText,
           ),
           const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Compartilhamento opcional',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Você não precisa marcar nenhuma opção para gravar, selecionar e analisar o vídeo.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: AppSpacing.md),
           Card(
             color: AppColors.accentSoft,
             child: CheckboxListTile(
