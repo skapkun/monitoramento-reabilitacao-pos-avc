@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:movere_app/models/clinical_data.dart';
 import 'package:movere_app/models/patient_summary.dart';
 import 'package:movere_app/screens/patient/history_screen.dart';
+import 'package:movere_app/screens/patient/patient_home_screen.dart';
 import 'package:movere_app/screens/patient/progress_screen.dart';
 import 'package:movere_app/screens/patient/recording_screen.dart';
 import 'package:movere_app/screens/patient/result_screen.dart';
@@ -28,6 +29,54 @@ void main() {
     expect(find.textContaining('8 repetições'), findsOneWidget);
     expect(find.textContaining('Inconclusiva'), findsOneWidget);
     expect(find.text('Gerar PDF desta sessão'), findsNWidgets(2));
+  });
+
+  testWidgets('início destaca o próximo exercício ainda não concluído', (
+    tester,
+  ) async {
+    final repository = _DailyRoutineRepository(
+      sessions: [
+        RehabilitationSession(
+          id: 'done-elbow',
+          patientId: 'patient',
+          exerciseType: 'elbow_flexion',
+          status: 'completed',
+          createdAt: DateTime.now(),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      MaterialApp(home: PatientHomeScreen(clinicalRepository: repository)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('1/3 concluídos'), findsOneWidget);
+    expect(find.text('Próximo exercício'), findsOneWidget);
+    expect(find.byKey(const Key('iniciar_squat')), findsOneWidget);
+  });
+
+  testWidgets('início comemora quando todos os exercícios foram concluídos', (
+    tester,
+  ) async {
+    final repository = _DailyRoutineRepository(
+      sessions: [
+        for (final type in ['elbow_flexion', 'squat', 'pinch'])
+          RehabilitationSession(
+            id: 'done-$type',
+            patientId: 'patient',
+            exerciseType: type,
+            status: 'completed',
+            createdAt: DateTime.now(),
+          ),
+      ],
+    );
+    await tester.pumpWidget(
+      MaterialApp(home: PatientHomeScreen(clinicalRepository: repository)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('rotina_diaria_concluida')), findsOneWidget);
+    expect(find.text('Rotina de hoje concluída!'), findsOneWidget);
   });
 
   testWidgets('paciente usa mensagem rápida e visualiza conversa', (
@@ -396,4 +445,42 @@ void main() {
     expect(find.text('Ângulo médio do lado afetado'), findsOneWidget);
     expect(find.text('Ângulo médio do lado não afetado'), findsOneWidget);
   });
+}
+
+class _DailyRoutineRepository extends DemoClinicalRepository {
+  const _DailyRoutineRepository({required this.sessions});
+
+  final List<RehabilitationSession> sessions;
+
+  @override
+  Stream<List<TherapyPlan>> watchMyPlan() => Stream.value(const [
+    TherapyPlan(
+      patientId: 'patient',
+      exerciseType: 'elbow_flexion',
+      title: 'Flexão de cotovelo',
+      instructions: '',
+      sessionsPerWeek: 3,
+      targetRepetitions: 8,
+    ),
+    TherapyPlan(
+      patientId: 'patient',
+      exerciseType: 'squat',
+      title: 'Agachamento',
+      instructions: '',
+      sessionsPerWeek: 3,
+      targetRepetitions: 8,
+    ),
+    TherapyPlan(
+      patientId: 'patient',
+      exerciseType: 'pinch',
+      title: 'Pinça',
+      instructions: '',
+      sessionsPerWeek: 3,
+      targetRepetitions: 8,
+    ),
+  ]);
+
+  @override
+  Stream<List<RehabilitationSession>> watchMySessions() =>
+      Stream.value(sessions);
 }

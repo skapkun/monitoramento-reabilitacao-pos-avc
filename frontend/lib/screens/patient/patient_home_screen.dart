@@ -81,8 +81,14 @@ class PatientHomeScreen extends StatelessWidget {
                 stream: clinicalRepository.watchMyPlan(),
                 builder: (context, snapshot) {
                   final plans = snapshot.data ?? const <TherapyPlan>[];
-                  return _TodayExerciseCard(
-                    plan: plans.isEmpty ? null : plans.first,
+                  return StreamBuilder<List<RehabilitationSession>>(
+                    stream: clinicalRepository.watchMySessions(),
+                    builder: (context, sessionSnapshot) => _DailyExercises(
+                      plans: plans,
+                      sessions:
+                          sessionSnapshot.data ??
+                          const <RehabilitationSession>[],
+                    ),
                   );
                 },
               ),
@@ -201,10 +207,139 @@ class _MotivationalMessage extends StatelessWidget {
   );
 }
 
+class _DailyExercises extends StatelessWidget {
+  const _DailyExercises({required this.plans, required this.sessions});
+
+  final List<TherapyPlan> plans;
+  final List<RehabilitationSession> sessions;
+
+  bool _completedToday(String exerciseType) {
+    final now = DateTime.now();
+    return sessions.any((session) {
+      final date = session.createdAt.toLocal();
+      return session.exerciseType == exerciseType &&
+          session.status == 'completed' &&
+          date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (plans.isEmpty) {
+      return const _TodayExerciseCard(plan: null, completed: false);
+    }
+    final ordered = [...plans]
+      ..sort((a, b) {
+        final aCompleted = _completedToday(a.exerciseType);
+        final bCompleted = _completedToday(b.exerciseType);
+        if (aCompleted == bCompleted) return 0;
+        return aCompleted ? 1 : -1;
+      });
+    final completed = ordered
+        .where((plan) => _completedToday(plan.exerciseType))
+        .length;
+    final allCompleted = completed == ordered.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (allCompleted)
+          Container(
+            key: const Key('rotina_diaria_concluida'),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: AppColors.successSoft,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.success),
+            ),
+            child: const Column(
+              children: [
+                Icon(
+                  Icons.verified_rounded,
+                  size: 56,
+                  color: AppColors.successSoftText,
+                ),
+                SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Rotina de hoje concluída!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.successSoftText,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Parabéns pela consistência. Agora descanse e respeite os sinais do seu corpo.',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          )
+        else ...[
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Exercícios de hoje',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              Text('$completed/${ordered.length} concluídos'),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          LinearProgressIndicator(
+            value: completed / ordered.length,
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          if (ordered.length > 1) ...[
+            const SizedBox(height: AppSpacing.xs),
+            const Text(
+              'Deslize para o lado para ver os outros exercícios.',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ],
+        ],
+        const SizedBox(height: AppSpacing.md),
+        SizedBox(
+          height: 300,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: ordered.length,
+            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
+            itemBuilder: (context, index) {
+              final plan = ordered[index];
+              return SizedBox(
+                width: MediaQuery.sizeOf(context).width - (AppSpacing.md * 2),
+                child: _TodayExerciseCard(
+                  plan: plan,
+                  completed: _completedToday(plan.exerciseType),
+                  isNext: !allCompleted && index == 0,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _TodayExerciseCard extends StatelessWidget {
-  const _TodayExerciseCard({required this.plan});
+  const _TodayExerciseCard({
+    required this.plan,
+    required this.completed,
+    this.isNext = false,
+  });
 
   final TherapyPlan? plan;
+  final bool completed;
+  final bool isNext;
 
   @override
   Widget build(BuildContext context) {
@@ -251,7 +386,11 @@ class _TodayExerciseCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Exercício em destaque',
+                        completed
+                            ? 'Concluído hoje'
+                            : isNext
+                            ? 'Próximo exercício'
+                            : 'Exercício de hoje',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.primarySoftText,
                         ),
@@ -272,14 +411,16 @@ class _TodayExerciseCard extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.md),
               ElevatedButton.icon(
-                key: const Key('iniciar_exercicio_destaque'),
-                onPressed: () => Navigator.pushNamed(
-                  context,
-                  AppRoutes.exercise,
-                  arguments: currentPlan,
-                ),
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('Iniciar exercício'),
+                key: Key('iniciar_${currentPlan.exerciseType}'),
+                onPressed: completed
+                    ? null
+                    : () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.exercise,
+                        arguments: currentPlan,
+                      ),
+                icon: Icon(completed ? Icons.check_circle : Icons.play_arrow),
+                label: Text(completed ? 'Concluído hoje' : 'Iniciar exercício'),
               ),
             ] else ...[
               const SizedBox(height: AppSpacing.md),

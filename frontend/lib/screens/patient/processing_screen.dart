@@ -181,13 +181,21 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
           validFrames: metrics?.validFrames,
           totalFrames: metrics?.totalFrames,
           detectionRatio: metrics?.detectionRatio,
-          evidence: widget.video?.shareWithTherapist == true
+          evidence:
+              widget.video?.shareWithTherapist == true ||
+                  widget.video?.shareFullVideo == true
               ? metrics?.evidence ?? const []
               : const [],
-          evidenceConsentAt: widget.video?.shareWithTherapist == true
-              ? widget.video?.consentAt ?? DateTime.now()
+          evidenceConsentAt:
+              widget.video?.shareWithTherapist == true ||
+                  widget.video?.shareFullVideo == true
+              ? widget.video?.consentAt ??
+                    widget.video?.videoConsentAt ??
+                    DateTime.now()
               : null,
-          evidenceConsentVersion: widget.video?.shareWithTherapist == true
+          evidenceConsentVersion:
+              widget.video?.shareWithTherapist == true ||
+                  widget.video?.shareFullVideo == true
               ? 'analysis-evidence-v1'
               : null,
         ),
