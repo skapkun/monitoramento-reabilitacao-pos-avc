@@ -200,30 +200,28 @@ class _SessionVideoScreenState extends State<SessionVideoScreen> {
           backgroundColor: AppColors.primarySoft,
           foregroundColor: AppColors.primarySoftText,
         ),
-        if (!widget.allowDelete) ...[
-          const SizedBox(height: AppSpacing.md),
-          SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(
-                value: true,
-                icon: Icon(Icons.analytics_outlined),
-                label: Text('Anotado'),
-              ),
-              ButtonSegment(
-                value: false,
-                icon: Icon(Icons.video_file_outlined),
-                label: Text('Original'),
-              ),
-            ],
-            selected: {annotated},
-            onSelectionChanged: (selection) {
-              final next = selection.first;
-              if (next == annotated) return;
-              setState(() => annotated = next);
-              load();
-            },
-          ),
-        ],
+        const SizedBox(height: AppSpacing.md),
+        SegmentedButton<bool>(
+          segments: const [
+            ButtonSegment(
+              value: true,
+              icon: Icon(Icons.analytics_outlined),
+              label: Text('Anotado'),
+            ),
+            ButtonSegment(
+              value: false,
+              icon: Icon(Icons.video_file_outlined),
+              label: Text('Original'),
+            ),
+          ],
+          selected: {annotated},
+          onSelectionChanged: (selection) {
+            final next = selection.first;
+            if (next == annotated) return;
+            setState(() => annotated = next);
+            load();
+          },
+        ),
         const SizedBox(height: AppSpacing.lg),
         if (error != null)
           StatusBanner(

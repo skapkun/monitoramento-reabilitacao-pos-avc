@@ -108,7 +108,10 @@ abstract final class AppRoutes {
         repository: clinicalRepository,
         sessionId: settings.arguments?.toString() ?? '',
       ),
-      patientHistory => HistoryScreen(repository: clinicalRepository),
+      patientHistory => HistoryScreen(
+        repository: clinicalRepository,
+        authRepository: authRepository,
+      ),
       patientProgress => PatientProgressScreen(repository: clinicalRepository),
       patientProfile => PatientProfileScreen(authRepository: authRepository),
       patientOrientations => OrientationsScreen(repository: clinicalRepository),

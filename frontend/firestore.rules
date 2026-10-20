@@ -463,8 +463,9 @@ service cloud.firestore {
           ])
           && (!('videoStoragePath' in request.resource.data) || (
             request.resource.data.videoStoragePath
-              == 'sessionVideos/' + request.auth.uid + '/' + sessionId + '/video'
-            && request.resource.data.videoConsentVersion == 'video-sharing-v1'
+              == 'fastapi://videos/' + sessionId
+            && request.resource.data.videoConsentVersion
+              == 'video-sharing-v2-local-encrypted'
             && request.resource.data.videoConsentAt is timestamp
             && request.resource.data.videoRetentionUntil is timestamp
             && request.resource.data.videoRetentionUntil > request.time
@@ -472,7 +473,8 @@ service cloud.firestore {
               <= request.time + duration.value(30, 'd')
           ))
           && (!('videoConsentVersion' in request.resource.data)
-            || request.resource.data.videoConsentVersion == 'video-sharing-v1')
+            || request.resource.data.videoConsentVersion
+              == 'video-sharing-v2-local-encrypted')
           && (!('videoSharedAt' in request.resource.data)
             || request.resource.data.videoSharedAt is timestamp)
           && (!('videoConsentAt' in request.resource.data)

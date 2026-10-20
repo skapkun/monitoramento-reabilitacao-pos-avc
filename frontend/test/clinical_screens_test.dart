@@ -27,6 +27,7 @@ void main() {
     expect(find.text('Sessões realizadas'), findsOneWidget);
     expect(find.textContaining('8 repetições'), findsOneWidget);
     expect(find.textContaining('Inconclusiva'), findsOneWidget);
+    expect(find.text('Gerar PDF desta sessão'), findsNWidgets(2));
   });
 
   testWidgets('paciente usa mensagem rápida e visualiza conversa', (
