@@ -10,6 +10,7 @@ import '../../widgets/session_list.dart';
 import '../../widgets/session_trend.dart';
 import '../shared/session_video_screen.dart';
 import '../shared/session_evidence_screen.dart';
+import '../shared/pdf_preview_screen.dart';
 
 class TherapistSessionsScreen extends StatelessWidget {
   const TherapistSessionsScreen({
@@ -28,10 +29,21 @@ class TherapistSessionsScreen extends StatelessWidget {
   ) async {
     final service = ReportApiService();
     try {
-      await service.generateSessionAndShare(
+      final bytes = await service.generateSession(
         patientId: patient.id,
         patientName: patient.name,
         session: session,
+      );
+      if (!context.mounted) return;
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PdfPreviewScreen(
+            title: 'Relatório da sessão',
+            filename: 'movere-sessao-${session.id}.pdf',
+            bytes: bytes,
+          ),
+        ),
       );
     } on ReportApiException catch (error) {
       if (!context.mounted) return;
@@ -41,7 +53,7 @@ class TherapistSessionsScreen extends StatelessWidget {
     } catch (_) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível compartilhar o PDF.')),
+        const SnackBar(content: Text('Não foi possível abrir o PDF.')),
       );
     } finally {
       service.close();
@@ -52,9 +64,9 @@ class TherapistSessionsScreen extends StatelessWidget {
     BuildContext context,
     RehabilitationSession session,
   ) async {
-    var rating = 3;
-    var conduct = 'maintain_training';
-    var visibleToPatient = false;
+    var rating = session.professionalRating ?? 3;
+    var conduct = session.professionalConduct ?? 'maintain_training';
+    var visibleToPatient = session.reviewVisibleToPatient;
     final commentController = TextEditingController(
       text: session.reviewComment ?? '',
     );
@@ -248,6 +260,25 @@ class TherapistSessionsScreen extends StatelessWidget {
                     Text(
                       selected.name,
                       style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Acompanhamento por sessão',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            const Text(
+                              '1. Confira o relato e o vídeo • 2. Revise as marcações • 3. Escolha a conduta • 4. Compartilhe uma orientação',
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     SessionTrend(sessions: snapshot.data!),

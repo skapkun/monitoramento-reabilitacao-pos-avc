@@ -77,75 +77,46 @@ class _WellbeingScreenState extends State<WellbeingScreen> {
           'Esta resposta é subjetiva e será compartilhada com seu fisioterapeuta.',
         ),
         const SizedBox(height: AppSpacing.lg),
+        Text(
+          'Avaliação geral da sessão',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        const Text('Escolha de 1 a 5 estrelas.'),
+        const SizedBox(height: AppSpacing.sm),
         Semantics(
           container: true,
-          label: 'Bem-estar selecionado: ${_wellbeingOptions[score - 1].label}',
-          child: Wrap(
-            alignment: WrapAlignment.center,
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: _wellbeingOptions.indexed.map((entry) {
-              final value = entry.$1 + 1;
-              final option = entry.$2;
-              final selected = score == value;
-              return Semantics(
-                selected: selected,
-                button: true,
-                label: '${option.label}, $value de 5',
-                child: InkWell(
-                  key: Key('bem_estar_$value'),
-                  onTap: () => setState(() => score = value),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    constraints: const BoxConstraints(
-                      minWidth: 96,
-                      minHeight: 72,
+          label: 'Avaliação selecionada: $score de 5 estrelas',
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  final value = index + 1;
+                  return IconButton(
+                    key: Key('bem_estar_$value'),
+                    tooltip: '$value de 5 estrelas',
+                    iconSize: 40,
+                    onPressed: () => setState(() => score = value),
+                    icon: Icon(
+                      value <= score ? Icons.star : Icons.star_border,
+                      color: AppColors.accent,
                     ),
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.surface,
-                      border: Border.all(
-                        color: selected
-                            ? Theme.of(context).colorScheme.primary
-                            : AppColors.border,
-                        width: selected ? 2 : 1,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          option.icon,
-                          color: selected
-                              ? Colors.white
-                              : AppColors.textPrimary,
-                          size: 32,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          option.label,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: selected
-                                    ? Colors.white
-                                    : AppColors.textPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+                  );
+                }),
+              ),
+              Text(
+                '$score de 5 — ${_wellbeingLabels[score - 1]}',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(
-          'Dor ou desconforto após a sessão: $painScore de 10',
+          'Dor ou desconforto percebido: $painScore de 10',
           style: Theme.of(context).textTheme.titleLarge,
         ),
         Slider(
@@ -162,7 +133,7 @@ class _WellbeingScreenState extends State<WellbeingScreen> {
         const Text('0 significa nenhuma dor; 10, a maior dor percebida.'),
         const SizedBox(height: AppSpacing.lg),
         Text(
-          'Cansaço após a sessão: $fatigueScore de 10',
+          'Cansaço percebido: $fatigueScore de 10',
           style: Theme.of(context).textTheme.titleLarge,
         ),
         Slider(
@@ -199,10 +170,10 @@ class _WellbeingScreenState extends State<WellbeingScreen> {
   );
 }
 
-const _wellbeingOptions = <({String label, IconData icon})>[
-  (label: 'Muito mal', icon: Icons.sentiment_very_dissatisfied),
-  (label: 'Mal', icon: Icons.sentiment_dissatisfied),
-  (label: 'Regular', icon: Icons.sentiment_neutral),
-  (label: 'Bem', icon: Icons.sentiment_satisfied),
-  (label: 'Muito bem', icon: Icons.sentiment_very_satisfied),
+const _wellbeingLabels = <String>[
+  'Muito ruim',
+  'Ruim',
+  'Regular',
+  'Boa',
+  'Muito boa',
 ];

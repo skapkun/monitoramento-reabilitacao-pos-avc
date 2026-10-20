@@ -63,107 +63,59 @@ class ResultScreen extends StatelessWidget {
                           : 'Repetições observadas',
                       value: '${metrics?.repetitions ?? 8}',
                     ),
-                    _ResultRow(
-                      label: 'Estado',
-                      value: isSimulated
-                          ? 'Demonstração concluída'
-                          : 'Vídeo analisado',
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Sessão concluída. Agora conte como você se sentiu.',
+                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
-                    _ResultRow(
-                      label: 'Origem',
-                      value: isSimulated
-                          ? 'Dados simulados'
-                          : 'Visão computacional experimental',
-                    ),
-                    if (metrics?.averageAmplitudeDegrees != null)
-                      _ResultRow(
-                        label: 'Amplitude média observada',
-                        value:
-                            '${metrics!.averageAmplitudeDegrees!.toStringAsFixed(1)}°',
-                      ),
-                    if (metrics?.confidence != null)
-                      _ResultRow(
-                        label: 'Qualidade técnica da detecção',
-                        value: '${(metrics!.confidence! * 100).round()}%',
-                      ),
-                    if (metrics?.averageDurationSeconds != null)
-                      _ResultRow(
-                        label: 'Tempo médio por repetição',
-                        value:
-                            '${metrics!.averageDurationSeconds!.toStringAsFixed(2)} s',
-                      ),
-                    if (metrics?.averageVelocityDegreesPerSecond != null)
-                      _ResultRow(
-                        label: 'Velocidade angular média',
-                        value:
-                            '${metrics!.averageVelocityDegreesPerSecond!.toStringAsFixed(1)}°/s',
-                      ),
-                    if (metrics?.averageSymmetryDifferenceDegrees != null)
-                      _ResultRow(
-                        label: 'Diferença bilateral média',
-                        value:
-                            '${metrics!.averageSymmetryDifferenceDegrees!.toStringAsFixed(1)}°',
-                      ),
-                    if (metrics?.averageDistance != null)
-                      _ResultRow(
-                        label: 'Distância média polegar–indicador',
-                        value: metrics!.averageDistance!.toStringAsFixed(3),
-                      ),
-                    if (metrics?.analyzedSide != null)
-                      _ResultRow(
-                        label: 'Braço analisado',
-                        value: metrics!.analyzedSide == 'left'
-                            ? 'Esquerdo'
-                            : 'Direito',
-                      ),
-                    if (metrics?.averageAffectedAngleDegrees != null)
-                      _ResultRow(
-                        label: 'Ângulo médio do lado afetado',
-                        value:
-                            '${metrics!.averageAffectedAngleDegrees!.toStringAsFixed(1)}°',
-                      ),
-                    if (metrics?.averageUnaffectedAngleDegrees != null)
-                      _ResultRow(
-                        label: 'Ângulo médio do lado não afetado',
-                        value:
-                            '${metrics!.averageUnaffectedAngleDegrees!.toStringAsFixed(1)}°',
-                      ),
                   ],
                 ),
               ),
             ),
-          if (!isInconclusive &&
-              (metrics?.movementEvents.isNotEmpty ?? false)) ...[
+          if (!isInconclusive && metrics != null) ...[
             const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Momentos importantes do vídeo',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            const Text(
-              'Os segundos abaixo ajudam você e o fisioterapeuta a encontrar cada momento no vídeo compartilhado.',
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ...metrics!.movementEvents.map(
-              (event) => Card(
-                color: event.severity == 'positive'
-                    ? AppColors.successSoft
-                    : AppColors.warningBackground,
-                child: ListTile(
-                  minVerticalPadding: AppSpacing.md,
-                  leading: Icon(
-                    event.severity == 'positive'
-                        ? Icons.star_outline
-                        : Icons.visibility_outlined,
-                    color: event.severity == 'positive'
-                        ? AppColors.successSoftText
-                        : AppColors.warningText,
-                  ),
-                  title: Text(event.title),
-                  subtitle: Text(
-                    '${event.description}\nMomento: ${_time(event.startSeconds)}',
-                  ),
+            Card(
+              child: ExpansionTile(
+                key: const Key('detalhes_tecnicos_resultado'),
+                leading: const Icon(Icons.analytics_outlined),
+                title: const Text('Ver detalhes da análise'),
+                subtitle: const Text(
+                  'Medidas técnicas para consultar quando desejar',
                 ),
+                childrenPadding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  0,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                ),
+                children: [
+                  _TechnicalDetails(metrics: metrics, isSimulated: isSimulated),
+                  if (metrics.movementEvents.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Momentos do vídeo',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    ...metrics.movementEvents.map(
+                      (event) => ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          event.severity == 'positive'
+                              ? Icons.star_outline
+                              : Icons.visibility_outlined,
+                        ),
+                        title: Text(event.title),
+                        subtitle: Text(
+                          '${event.description}\nMomento: ${_time(event.startSeconds)}',
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
@@ -230,6 +182,74 @@ class ResultScreen extends StatelessWidget {
         .padLeft(2, '0');
     return '$minutes:$remainder';
   }
+}
+
+class _TechnicalDetails extends StatelessWidget {
+  const _TechnicalDetails({required this.metrics, required this.isSimulated});
+
+  final AnalysisApiMetrics metrics;
+  final bool isSimulated;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      _ResultRow(
+        label: 'Origem',
+        value: isSimulated
+            ? 'Dados simulados'
+            : 'Visão computacional experimental',
+      ),
+      if (metrics.averageAmplitudeDegrees != null)
+        _ResultRow(
+          label: 'Amplitude média observada',
+          value: '${metrics.averageAmplitudeDegrees!.toStringAsFixed(1)}°',
+        ),
+      if (metrics.confidence != null)
+        _ResultRow(
+          label: 'Qualidade técnica da detecção',
+          value: '${(metrics.confidence! * 100).round()}%',
+        ),
+      if (metrics.averageDurationSeconds != null)
+        _ResultRow(
+          label: 'Tempo médio por repetição',
+          value: '${metrics.averageDurationSeconds!.toStringAsFixed(2)} s',
+        ),
+      if (metrics.averageVelocityDegreesPerSecond != null)
+        _ResultRow(
+          label: 'Velocidade angular média',
+          value:
+              '${metrics.averageVelocityDegreesPerSecond!.toStringAsFixed(1)}°/s',
+        ),
+      if (metrics.averageSymmetryDifferenceDegrees != null)
+        _ResultRow(
+          label: 'Diferença bilateral média',
+          value:
+              '${metrics.averageSymmetryDifferenceDegrees!.toStringAsFixed(1)}°',
+        ),
+      if (metrics.averageDistance != null)
+        _ResultRow(
+          label: 'Distância média polegar–indicador',
+          value: metrics.averageDistance!.toStringAsFixed(3),
+        ),
+      if (metrics.analyzedSide != null)
+        _ResultRow(
+          label: 'Braço analisado',
+          value: metrics.analyzedSide == 'left' ? 'Esquerdo' : 'Direito',
+        ),
+      if (metrics.averageAffectedAngleDegrees != null)
+        _ResultRow(
+          label: 'Ângulo médio do lado afetado',
+          value: '${metrics.averageAffectedAngleDegrees!.toStringAsFixed(1)}°',
+        ),
+      if (metrics.averageUnaffectedAngleDegrees != null)
+        _ResultRow(
+          label: 'Ângulo médio do lado não afetado',
+          value:
+              '${metrics.averageUnaffectedAngleDegrees!.toStringAsFixed(1)}°',
+        ),
+    ],
+  );
 }
 
 class _ResultRow extends StatelessWidget {

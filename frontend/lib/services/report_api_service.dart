@@ -18,32 +18,68 @@ class ReportApiService {
   final http.Client _client;
   final String baseUrl;
 
+  Future<Uint8List> generate({
+    required String patientId,
+    required String patientName,
+    required List<RehabilitationSession> sessions,
+  }) => _requestPdf(
+    path: '/reports/longitudinal.pdf',
+    errorMessage:
+        'Não foi possível gerar o relatório. Confirme se a API está em execução.',
+    body: {
+      'patient_id': patientId,
+      'patient_name': patientName,
+      'sessions': sessions.map(_sessionJson).toList(),
+    },
+  );
+
+  Future<Uint8List> generateSession({
+    required String patientId,
+    required String patientName,
+    required RehabilitationSession session,
+  }) => _requestPdf(
+    path: '/reports/session.pdf',
+    errorMessage:
+        'Não foi possível gerar o PDF desta sessão. Confirme se a API está em execução.',
+    body: {
+      'patient_id': patientId,
+      'patient_name': patientName,
+      'session': _sessionJson(session),
+    },
+  );
+
+  Future<Uint8List> _requestPdf({
+    required String path,
+    required String errorMessage,
+    required Map<String, Object?> body,
+  }) async {
+    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl$path'),
+          headers: {
+            'Content-Type': 'application/json',
+            if (token != null) 'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 20));
+    if (response.statusCode != 200 || response.bodyBytes.length < 4) {
+      throw ReportApiException(errorMessage);
+    }
+    return Uint8List.fromList(response.bodyBytes);
+  }
+
   Future<String> generateAndShare({
     required String patientId,
     required String patientName,
     required List<RehabilitationSession> sessions,
   }) async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
-    final response = await _client
-        .post(
-          Uri.parse('$baseUrl/reports/longitudinal.pdf'),
-          headers: {
-            'Content-Type': 'application/json',
-            if (token != null) 'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode({
-            'patient_id': patientId,
-            'patient_name': patientName,
-            'sessions': sessions.map(_sessionJson).toList(),
-          }),
-        )
-        .timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200 || response.bodyBytes.length < 4) {
-      throw const ReportApiException(
-        'Não foi possível gerar o relatório. Confirme se a API está em execução.',
-      );
-    }
-    final bytes = Uint8List.fromList(response.bodyBytes);
+    final bytes = await generate(
+      patientId: patientId,
+      patientName: patientName,
+      sessions: sessions,
+    );
     final directory = await getTemporaryDirectory();
     final safeId = patientId.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
     final file = File('${directory.path}/movere-relatorio-$safeId.pdf');
@@ -63,30 +99,15 @@ class ReportApiService {
     required String patientName,
     required RehabilitationSession session,
   }) async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
-    final response = await _client
-        .post(
-          Uri.parse('$baseUrl/reports/session.pdf'),
-          headers: {
-            'Content-Type': 'application/json',
-            if (token != null) 'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode({
-            'patient_id': patientId,
-            'patient_name': patientName,
-            'session': _sessionJson(session),
-          }),
-        )
-        .timeout(const Duration(seconds: 20));
-    if (response.statusCode != 200 || response.bodyBytes.length < 4) {
-      throw const ReportApiException(
-        'Não foi possível gerar o PDF desta sessão. Confirme se a API está em execução.',
-      );
-    }
+    final bytes = await generateSession(
+      patientId: patientId,
+      patientName: patientName,
+      session: session,
+    );
     final directory = await getTemporaryDirectory();
     final safeId = session.id.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
     final file = File('${directory.path}/movere-sessao-$safeId.pdf');
-    await file.writeAsBytes(response.bodyBytes, flush: true);
+    await file.writeAsBytes(bytes, flush: true);
     await SharePlus.instance.share(
       ShareParams(
         title: 'Relatório individual da sessão',

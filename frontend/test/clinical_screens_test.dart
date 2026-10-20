@@ -84,12 +84,10 @@ void main() {
 
     expect(find.text('Paciente Teste'), findsOneWidget);
     expect(find.text('2 sessões registradas'), findsOneWidget);
-    expect(find.text('Gerar e compartilhar PDF'), findsOneWidget);
+    expect(find.text('Gerar e visualizar PDF'), findsOneWidget);
   });
 
-  testWidgets('paciente informa bem-estar em escala de cinco pontos', (
-    tester,
-  ) async {
+  testWidgets('paciente avalia a sessão com cinco estrelas', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: WellbeingScreen(repository: repository, sessionId: 'demo-1'),
@@ -102,8 +100,8 @@ void main() {
     expect(find.byKey(const Key('fadiga_pos_sessao')), findsOneWidget);
     await tester.tap(find.byKey(const Key('bem_estar_5')));
     await tester.pump();
-    expect(find.text('Muito bem'), findsOneWidget);
-    expect(find.byIcon(Icons.sentiment_very_satisfied), findsOneWidget);
+    expect(find.text('5 de 5 — Muito boa'), findsOneWidget);
+    expect(find.byIcon(Icons.star), findsNWidgets(5));
   });
 
   testWidgets('fisioterapeuta abre avaliação e escolhe conduta', (
@@ -127,9 +125,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.byTooltip('Marcar como revisada'));
+    await tester.ensureVisible(find.text('Revisar sessão').first);
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Marcar como revisada'));
+    await tester.tap(find.text('Revisar sessão').first);
     await tester.pumpAndSettle();
     expect(find.text('Avaliar sessão'), findsOneWidget);
     expect(find.text('Manter treino'), findsOneWidget);
@@ -148,6 +146,8 @@ void main() {
     );
     expect(checkbox.value, isFalse);
 
+    await tester.ensureVisible(find.byKey(const Key('compartilhar_video')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('compartilhar_video')));
     await tester.pump();
 
@@ -387,7 +387,10 @@ void main() {
       ),
     );
 
-    expect(find.text('Momentos importantes do vídeo'), findsOneWidget);
+    expect(find.text('Ver detalhes da análise'), findsOneWidget);
+    await tester.tap(find.text('Ver detalhes da análise'));
+    await tester.pumpAndSettle();
+    expect(find.text('Momentos do vídeo'), findsOneWidget);
     expect(find.text('Maior amplitude observada'), findsOneWidget);
     expect(find.text('Ângulo médio do lado afetado'), findsOneWidget);
     expect(find.text('Ângulo médio do lado não afetado'), findsOneWidget);

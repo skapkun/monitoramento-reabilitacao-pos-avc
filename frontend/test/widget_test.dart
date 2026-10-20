@@ -319,7 +319,10 @@ void main() {
 
     expect(find.text('Resultado simulado'), findsOneWidget);
     expect(find.text('Repetições simuladas'), findsOneWidget);
-    expect(find.text('Dados simulados'), findsOneWidget);
+    expect(
+      find.text('Sessão concluída. Agora conte como você se sentiu.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('permite falha simulada e nova tentativa', (tester) async {

@@ -43,6 +43,7 @@ class SessionList extends StatelessWidget {
         final visibleEvents = professionalView
             ? session.movementEvents
             : _confirmedEventsForPatient(session);
+        final reviewed = session.professionalRating != null;
         return Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.md),
           child: Card(
@@ -64,13 +65,7 @@ class SessionList extends StatelessWidget {
                     '$dateLabel\n${quantity(session.repetitions, 'repetição', 'repetições')} • ${_status(session.status)}',
                   ),
                   isThreeLine: true,
-                  trailing: onReview != null && session.requiresReview
-                      ? IconButton(
-                          tooltip: 'Marcar como revisada',
-                          onPressed: () => onReview!(session),
-                          icon: const Icon(Icons.task_alt),
-                        )
-                      : session.simulated
+                  trailing: session.simulated
                       ? const Tooltip(
                           message: 'Dado simulado',
                           child: Icon(Icons.science_outlined),
@@ -108,9 +103,44 @@ class SessionList extends StatelessWidget {
                             ? AppColors.textSecondary
                             : AppColors.warningText,
                       ),
+                      if (professionalView)
+                        _SummaryChip(
+                          icon: reviewed
+                              ? Icons.task_alt
+                              : Icons.pending_actions_outlined,
+                          label: reviewed ? 'Revisada' : 'Revisão pendente',
+                          background: reviewed
+                              ? AppColors.successSoft
+                              : AppColors.warningBackground,
+                          foreground: reviewed
+                              ? AppColors.successSoftText
+                              : AppColors.warningText,
+                        ),
                     ],
                   ),
                 ),
+                if (onReview != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      0,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                    ),
+                    child: reviewed
+                        ? OutlinedButton.icon(
+                            key: Key('revisar_sessao_${session.id}'),
+                            onPressed: () => onReview!(session),
+                            icon: const Icon(Icons.edit_outlined),
+                            label: const Text('Editar avaliação'),
+                          )
+                        : FilledButton.icon(
+                            key: Key('revisar_sessao_${session.id}'),
+                            onPressed: () => onReview!(session),
+                            icon: const Icon(Icons.fact_check_outlined),
+                            label: const Text('Revisar sessão'),
+                          ),
+                  ),
                 if (successes.isNotEmpty || concerns.isNotEmpty)
                   Theme(
                     data: Theme.of(

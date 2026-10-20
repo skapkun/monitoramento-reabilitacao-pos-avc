@@ -10,6 +10,7 @@ import '../../theme/app_spacing.dart';
 import '../../utils/portuguese_text.dart';
 import '../../widgets/app_page.dart';
 import '../../widgets/status_banner.dart';
+import '../shared/pdf_preview_screen.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({required this.repository, this.patient, super.key});
@@ -31,10 +32,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
     setState(() => generating = true);
     final service = ReportApiService();
     try {
-      await service.generateAndShare(
+      final bytes = await service.generate(
         patientId: patient.id,
         patientName: patient.name,
         sessions: sessions,
+      );
+      if (!mounted) return;
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PdfPreviewScreen(
+            title: 'Relatório longitudinal',
+            filename: 'movere-relatorio-${patient.id}.pdf',
+            bytes: bytes,
+          ),
+        ),
       );
     } on ReportApiException catch (error) {
       if (mounted) {
@@ -45,9 +57,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Não foi possível compartilhar o relatório.'),
-          ),
+          const SnackBar(content: Text('Não foi possível abrir o relatório.')),
         );
       }
     } finally {
@@ -131,9 +141,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       onPressed: generating ? null : () => generate(sessions),
                       icon: const Icon(Icons.picture_as_pdf_outlined),
                       label: Text(
-                        generating
-                            ? 'Gerando PDF…'
-                            : 'Gerar e compartilhar PDF',
+                        generating ? 'Gerando PDF…' : 'Gerar e visualizar PDF',
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
