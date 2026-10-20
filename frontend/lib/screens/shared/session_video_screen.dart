@@ -33,17 +33,39 @@ class _SessionVideoScreenState extends State<SessionVideoScreen> {
   File? temporaryFile;
   String? error;
   bool deleting = false;
+  late bool annotated;
   final Map<int, Uint8List> thumbnails = {};
 
   @override
   void initState() {
     super.initState();
+    annotated = !widget.allowDelete;
     load();
   }
 
   Future<void> load() async {
+    final previousController = controller;
+    final previousFile = temporaryFile;
+    if (previousController != null) {
+      previousController.removeListener(_onVideoChanged);
+      await previousController.dispose();
+    }
+    if (previousFile != null) {
+      await previousFile.delete().catchError((_) => previousFile);
+    }
+    if (mounted) {
+      setState(() {
+        controller = null;
+        temporaryFile = null;
+        error = null;
+        thumbnails.clear();
+      });
+    }
     try {
-      final path = await widget.repository.downloadSessionVideo(widget.session);
+      final path = await widget.repository.downloadSessionVideo(
+        widget.session,
+        annotated: annotated,
+      );
       final file = File(path);
       final player = VideoPlayerController.file(file);
       await player.initialize();
@@ -169,14 +191,39 @@ class _SessionVideoScreenState extends State<SessionVideoScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const StatusBanner(
-          icon: Icons.lock_outline,
-          title: 'Vídeo privado',
-          message:
-              'Este arquivo contém imagem pessoal e só pode ser acessado pelo paciente e pelo fisioterapeuta vinculado.',
+        StatusBanner(
+          icon: annotated ? Icons.analytics_outlined : Icons.lock_outline,
+          title: annotated ? 'Vídeo anotado privado' : 'Vídeo original privado',
+          message: annotated
+              ? 'O esqueleto, a medida e a contagem são experimentais e precisam de revisão profissional.'
+              : 'Este arquivo contém imagem pessoal e só pode ser acessado pelo paciente e pelo fisioterapeuta vinculado.',
           backgroundColor: AppColors.primarySoft,
           foregroundColor: AppColors.primarySoftText,
         ),
+        if (!widget.allowDelete) ...[
+          const SizedBox(height: AppSpacing.md),
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(
+                value: true,
+                icon: Icon(Icons.analytics_outlined),
+                label: Text('Anotado'),
+              ),
+              ButtonSegment(
+                value: false,
+                icon: Icon(Icons.video_file_outlined),
+                label: Text('Original'),
+              ),
+            ],
+            selected: {annotated},
+            onSelectionChanged: (selection) {
+              final next = selection.first;
+              if (next == annotated) return;
+              setState(() => annotated = next);
+              load();
+            },
+          ),
+        ],
         const SizedBox(height: AppSpacing.lg),
         if (error != null)
           StatusBanner(

@@ -577,7 +577,10 @@ class FirebaseClinicalRepository implements ClinicalRepository {
   }
 
   @override
-  Future<String> downloadSessionVideo(RehabilitationSession session) async {
+  Future<String> downloadSessionVideo(
+    RehabilitationSession session, {
+    bool annotated = false,
+  }) async {
     final path = session.videoStoragePath;
     if (path == null || path.isEmpty) {
       throw const ClinicalRepositoryException('Esta sessão não possui vídeo.');
@@ -588,10 +591,15 @@ class FirebaseClinicalRepository implements ClinicalRepository {
       );
     }
     try {
-      return await _videoApi.download(session.id);
+      return await _videoApi.download(
+        session.id,
+        annotated: annotated,
+        exerciseType: session.exerciseType,
+        analyzedSide: session.affectedSide ?? session.prescribedTrainingSide,
+      );
     } catch (_) {
       throw const ClinicalRepositoryException(
-        'Não foi possível carregar o vídeo da sessão.',
+        'Não foi possível carregar o vídeo da sessão. Confirme se o FastAPI está ativo.',
       );
     }
   }

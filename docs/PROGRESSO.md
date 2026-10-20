@@ -145,6 +145,8 @@ Atualizar este documento ao concluir cada tarefa. Não marcar itens apenas inici
 
 - [x] PDF individual disponível em cada sessão do acompanhamento profissional,
   com resultado, prescrição, relato, métricas, revisão e evidências autorizadas.
+- [x] Vídeo anotado privado gerado sob demanda para revisão profissional, com
+  esqueleto relevante, medida instantânea, contador e comparação com o original.
 - [x] PDF longitudinal gerado pelo FastAPI, com gráfico Matplotlib, métricas técnicas, bem-estar e revisão profissional, e compartilhável no aplicativo.
 - [x] PDF inclui a revisão dos momentos destacados e as orientações registradas
   pelo fisioterapeuta, sem transformar achados técnicos em diagnóstico.

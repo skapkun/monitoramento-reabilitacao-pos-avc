@@ -47,7 +47,10 @@ abstract interface class ClinicalRepository {
     required String contentType,
     required DateTime consentAt,
   });
-  Future<String> downloadSessionVideo(RehabilitationSession session);
+  Future<String> downloadSessionVideo(
+    RehabilitationSession session, {
+    bool annotated = false,
+  });
   Future<void> deleteSessionVideo(RehabilitationSession session);
   Future<void> deleteSessionEvidence(RehabilitationSession session);
   Future<void> markSessionReviewed(String sessionId);
@@ -246,10 +249,12 @@ class DemoClinicalRepository implements ClinicalRepository {
   }) async {}
 
   @override
-  Future<String> downloadSessionVideo(RehabilitationSession session) async =>
-      throw const ClinicalRepositoryException(
-        'Vídeos não estão disponíveis no modo demonstração.',
-      );
+  Future<String> downloadSessionVideo(
+    RehabilitationSession session, {
+    bool annotated = false,
+  }) async => throw const ClinicalRepositoryException(
+    'Vídeos não estão disponíveis no modo demonstração.',
+  );
 
   @override
   Future<void> deleteSessionVideo(RehabilitationSession session) async {}

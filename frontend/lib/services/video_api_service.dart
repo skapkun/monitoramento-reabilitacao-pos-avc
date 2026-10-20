@@ -103,9 +103,22 @@ class VideoApiService {
     return VideoUploadResult.fromJson(payload['data'] as Map<String, dynamic>);
   }
 
-  Future<String> download(String sessionId) async {
+  Future<String> download(
+    String sessionId, {
+    bool annotated = false,
+    String? exerciseType,
+    String? analyzedSide,
+  }) async {
+    final uri = annotated
+        ? Uri.parse('$baseUrl/videos/$sessionId/annotated').replace(
+            queryParameters: {
+              'exercise_type': exerciseType ?? 'elbow_flexion',
+              if (analyzedSide != null) 'analyzed_side': analyzedSide,
+            },
+          )
+        : Uri.parse('$baseUrl/videos/$sessionId');
     final response = await _client
-        .get(Uri.parse('$baseUrl/videos/$sessionId'), headers: await _headers())
+        .get(uri, headers: await _headers())
         .timeout(const Duration(minutes: 2));
     if (response.statusCode != 200) {
       throw VideoApiException(_errorMessage(response, 'Vídeo indisponível.'));
@@ -117,7 +130,8 @@ class VideoApiService {
         ? 'webm'
         : 'mp4';
     final directory = await getTemporaryDirectory();
-    final file = File('${directory.path}/movere-$sessionId.$extension');
+    final suffix = annotated ? '-anotado' : '';
+    final file = File('${directory.path}/movere-$sessionId$suffix.$extension');
     await file.writeAsBytes(response.bodyBytes, flush: true);
     return file.path;
   }

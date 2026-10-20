@@ -2,13 +2,19 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
 
 from app.config import settings
 from app.routes.analysis import ALLOWED_VIDEO_EXTENSIONS, ALLOWED_VIDEO_TYPES
+from app.schemas.analysis import ExerciseType
 from app.security.firebase_auth import AuthenticatedUser, require_authenticated_user
+from app.services.annotated_video_service import (
+    AnnotatedVideoError,
+    AnnotatedVideoService,
+)
 from app.services.video_storage_service import (
     VideoAccessDeniedError,
     VideoNotFoundError,
@@ -24,6 +30,7 @@ video_storage_service = VideoStorageService(
     encryption_key=settings.video_encryption_key,
     retention_days=settings.video_retention_days,
 )
+annotated_video_service = AnnotatedVideoService()
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -92,6 +99,52 @@ def download_video(
         media_type=metadata.content_type,
         headers={
             "Content-Disposition": f'inline; filename="{metadata.original_filename}"',
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+@router.get("/{session_id}/annotated")
+def download_annotated_video(
+    session_id: UUID,
+    exercise_type: ExerciseType,
+    analyzed_side: Optional[str] = None,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+) -> Response:
+    try:
+        _metadata, content = video_storage_service.retrieve(
+            session_id, current_user.uid
+        )
+        annotated = annotated_video_service.render(
+            content,
+            exercise_type=exercise_type,
+            analyzed_side=(
+                analyzed_side if analyzed_side in {"left", "right"} else None
+            ),
+        )
+    except VideoAccessDeniedError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vídeo não encontrado.",
+        ) from error
+    except VideoNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vídeo não encontrado.",
+        ) from error
+    except AnnotatedVideoError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(error),
+        ) from error
+    return Response(
+        content=annotated,
+        media_type="video/mp4",
+        headers={
+            "Content-Disposition": (
+                f'inline; filename="movere-{session_id}-anotado.mp4"'
+            ),
             "Cache-Control": "private, no-store",
             "X-Content-Type-Options": "nosniff",
         },

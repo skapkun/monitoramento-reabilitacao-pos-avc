@@ -32,9 +32,10 @@ Este documento registra o estado do software em relação ao artigo **“Uma Apl
   protótipo posterior ao artigo. Ela é separada da meta terapêutica, exige
   justificativa e não constitui parâmetro clínico validado.
 - A distância da pinça usa coordenadas normalizadas 2D; não é uma medida física.
-- O vídeo compartilhado apresenta a gravação original; os eventos técnicos e
-  seus instantes aparecem associados à sessão, mas ainda não são desenhados
-  quadro a quadro sobre o arquivo reproduzido.
+- O fisioterapeuta pode alternar entre a gravação original e uma versão anotada
+  gerada sob demanda, com pontos e segmentos relevantes, medida instantânea,
+  contador de repetições e aviso de análise experimental. Os eventos técnicos
+  continuam sincronizados à reprodução para revisão profissional.
 - O vínculo atual é iniciado pelo fisioterapeuta com o identificador do paciente e confirmado pelo paciente. Isso difere do fluxo textual de código gerado pelo profissional, preservando consentimento explícito antes do acesso.
 - O Firestore mantém os dados estruturados. Vídeo e metadados audiovisuais são
   cifrados com AES-256-GCM no servidor; o SQLite armazena apenas localizadores,
@@ -87,6 +88,12 @@ Quando o paciente autoriza, até quatro desses momentos são persistidos como
 JPEGs compactados no Firestore e podem ser incluídos no PDF. Em consentimento
 separado, o vídeo completo pode ser mantido cifrado por até 30 dias. Os eventos
 são heurísticos experimentais e exigem revisão do fisioterapeuta.
+
+O vídeo anotado para revisão profissional também é uma extensão posterior ao
+artigo. Ele é renderizado sob demanda a partir do arquivo privado autorizado,
+sem publicação externa nem aumento do prazo de retenção. A sobreposição não é
+uma medida clínica validada e o vídeo original permanece disponível para
+comparação.
 
 ## Verificações automatizadas em 18/10/2026
 
