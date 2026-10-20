@@ -39,7 +39,7 @@ class _SessionVideoScreenState extends State<SessionVideoScreen> {
   @override
   void initState() {
     super.initState();
-    annotated = !widget.allowDelete;
+    annotated = true;
     load();
   }
 

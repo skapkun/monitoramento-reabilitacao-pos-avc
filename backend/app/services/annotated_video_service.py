@@ -86,11 +86,13 @@ class AnnotatedVideoService:
                         break
                     landmarks = extractor.extract(frame) or {}
                     side = analyzed_side if analyzed_side in {"left", "right"} else None
+                    if exercise_type is not ExerciseType.pinch:
+                        self._draw_pose(frame, landmarks, width, height)
                     value = self._draw_measurement(
                         frame, landmarks, exercise_type, side, width, height
                     )
                     counter.update(value)
-                    self._draw_panel(frame, exercise_type, value, counter.repetitions)
+                    self._draw_panel(frame, exercise_type, value, counter)
                     writer.write(frame)
         except Exception as error:
             raise AnnotatedVideoError(
@@ -162,10 +164,49 @@ class AnnotatedVideoService:
             cv2.circle(frame, point, 8, (20, 92, 99), 3, cv2.LINE_AA)
 
     @staticmethod
-    def _draw_panel(frame, exercise_type, value, repetitions: int) -> None:
+    def _draw_pose(frame, landmarks, width: int, height: int) -> None:
+        connections = (
+            ("left_shoulder", "right_shoulder"),
+            ("left_shoulder", "left_elbow"),
+            ("left_elbow", "left_wrist"),
+            ("right_shoulder", "right_elbow"),
+            ("right_elbow", "right_wrist"),
+            ("left_shoulder", "left_hip"),
+            ("right_shoulder", "right_hip"),
+            ("left_hip", "right_hip"),
+            ("left_hip", "left_knee"),
+            ("left_knee", "left_ankle"),
+            ("right_hip", "right_knee"),
+            ("right_knee", "right_ankle"),
+        )
+        visible_names = {
+            name
+            for connection in connections
+            for name in connection
+            if name in landmarks and landmarks[name].visibility >= 0.45
+        }
+        points = {
+            name: (
+                int(landmarks[name].x * width),
+                int(landmarks[name].y * height),
+            )
+            for name in visible_names
+        }
+        for start, end in connections:
+            if start in points and end in points:
+                cv2.line(
+                    frame, points[start], points[end], (255, 180, 52), 3,
+                    cv2.LINE_AA,
+                )
+        for point in points.values():
+            cv2.circle(frame, point, 6, (255, 255, 255), -1, cv2.LINE_AA)
+            cv2.circle(frame, point, 6, (255, 126, 31), 2, cv2.LINE_AA)
+
+    @staticmethod
+    def _draw_panel(frame, exercise_type, value, counter: "_LiveCounter") -> None:
         height, width = frame.shape[:2]
         overlay = frame.copy()
-        cv2.rectangle(overlay, (0, 0), (width, 92), (12, 35, 38), -1)
+        cv2.rectangle(overlay, (0, 0), (width, 126), (12, 35, 38), -1)
         cv2.rectangle(
             overlay, (0, max(0, height - 40)), (width, height), (12, 35, 38), -1
         )
@@ -179,8 +220,14 @@ class AnnotatedVideoService:
             0.72, (255, 255, 255), 2, cv2.LINE_AA
         )
         cv2.putText(
-            frame, f"Repeticoes: {repetitions}", (18, 74), cv2.FONT_HERSHEY_SIMPLEX,
+            frame, f"Repeticoes: {counter.repetitions}", (18, 74), cv2.FONT_HERSHEY_SIMPLEX,
             0.78, (71, 231, 190), 2, cv2.LINE_AA
+        )
+        status = counter.status(value)
+        status_color = (92, 224, 255) if value is None else (255, 255, 255)
+        cv2.putText(
+            frame, f"Estado: {status}", (18, 108), cv2.FONT_HERSHEY_SIMPLEX,
+            0.62, status_color, 2, cv2.LINE_AA
         )
         cv2.putText(
             frame, "Analise experimental - requer revisao profissional",
@@ -212,3 +259,16 @@ class _LiveCounter:
         elif self.state == "changed" and value >= start:
             self.repetitions += 1
             self.state = "started"
+
+    def status(self, value: Optional[float]) -> str:
+        if value is None:
+            return (
+                "mao nao detectada"
+                if self.exercise_type is ExerciseType.pinch
+                else "pose nao detectada"
+            )
+        return {
+            "waiting_start": "aguardando posicao inicial",
+            "started": "movimento iniciado",
+            "changed": "retornando para completar",
+        }.get(self.state, "analisando")
