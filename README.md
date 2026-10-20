@@ -65,18 +65,44 @@ movere/
 ## Como executar
 
 ### Pré-requisitos
-- Flutter SDK
-- Python 3.11+ (o Python 3.9 local ainda executa os testes, mas está fora de suporte)
-- Git
-- Docker Desktop ou Docker Engine com Compose (opcional, somente para o backend)
+
+- Git para baixar o projeto.
+- Flutter SDK configurado no `PATH`.
+- Python 3.11 ou mais recente. O Python 3.9 ainda pode executar o projeto, mas
+  está fora de suporte.
+- Android Studio com Android SDK, ferramentas de linha de comando e pelo menos
+  um emulador Android configurado. Também é possível usar um aparelho Android
+  com depuração USB habilitada.
+- Xcode e CocoaPods no macOS, somente para executar o aplicativo no simulador
+  ou em um dispositivo iOS. Não é possível compilar o aplicativo iOS no
+  Windows ou Linux.
+- Docker Desktop ou Docker Engine com Compose, opcional e usado somente para o
+  backend.
 
 Use o terminal do seu sistema: Terminal no macOS/Linux ou PowerShell no
 Windows. Para preparar Flutter, Android Studio, emuladores e dispositivos,
 consulte o guia detalhado em [CONFIGURACAO.md](./docs/CONFIGURACAO.md).
 
+Depois de instalar o Flutter e o Android Studio, confirme a configuração:
+
+```bash
+flutter doctor
+flutter devices
+```
+
+Resolva os itens indicados pelo `flutter doctor` antes de continuar. Para o
+Android, abra o Android Studio e use **Device Manager** para criar e iniciar um
+emulador. No macOS, o simulador iOS também pode ser aberto com:
+
+```bash
+open -a Simulator
+```
+
 ### Instalação
 
 #### Backend (FastAPI)
+
+Abra um terminal na pasta do projeto e mantenha-o aberto enquanto usar o app.
 
 macOS/Linux:
 
@@ -85,7 +111,7 @@ cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
-python main.py
+ANALYSIS_MODE=real python main.py
 ```
 
 Windows PowerShell:
@@ -95,6 +121,7 @@ cd backend
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements-dev.txt
+$env:ANALYSIS_MODE = "real"
 python main.py
 ```
 
@@ -102,6 +129,15 @@ Se o PowerShell bloquear a ativação, execute uma vez na sessão atual:
 `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`.
 
 Servidor disponível em: `http://localhost:8000`
+
+Confirme que a API iniciou corretamente abrindo:
+
+- Saúde da API: `http://localhost:8000/health`
+- Documentação interativa: `http://localhost:8000/docs`
+
+Para interromper o FastAPI, pressione `Ctrl + C`. Para iniciar sem executar a
+visão computacional real, remova `ANALYSIS_MODE=real` e use apenas
+`python main.py`.
 
 Como alternativa, a estrutura de conteinerização preparada na fase 3 pode ser executada com:
 
@@ -113,7 +149,7 @@ O uso de Docker é opcional. O Flutter deve continuar sendo executado diretament
 
 #### Frontend (Flutter)
 
-Os comandos são os mesmos no macOS, Linux e Windows:
+Abra um segundo terminal. Os comandos são os mesmos no macOS, Linux e Windows:
 
 ```bash
 cd frontend
@@ -121,6 +157,14 @@ flutter pub get
 flutter doctor
 flutter run
 ```
+
+Se houver mais de um aparelho ou emulador disponível, liste-os com
+`flutter devices` e escolha um com `flutter run -d ID_DO_DISPOSITIVO`.
+
+No simulador iOS e no navegador, o app acessa `http://localhost:8000`. No
+emulador Android, usa `http://10.0.2.2:8000`. Um celular físico precisa estar na
+mesma rede do computador e usar o endereço IP local explicado em
+[CONFIGURACAO.md](./docs/CONFIGURACAO.md).
 
 ## Fluxos principais
 
