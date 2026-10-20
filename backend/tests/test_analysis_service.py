@@ -69,7 +69,7 @@ def test_real_service_maps_metrics_and_removes_temporary_video(tmp_path: Path) -
     assert video.exists() is False
 
 
-def test_real_service_preserves_inconclusive_without_metrics(tmp_path: Path) -> None:
+def test_real_service_preserves_inconclusive_with_technical_context(tmp_path: Path) -> None:
     service = AnalysisService(mode="real", pipeline=InconclusivePipeline())
     accepted = service.create(uuid4(), ExerciseType.elbow_flexion)
     video = make_video(tmp_path)
@@ -79,7 +79,10 @@ def test_real_service_preserves_inconclusive_without_metrics(tmp_path: Path) -> 
     result = service.get(accepted.analysis_id)
     assert result is not None
     assert result.status is AnalysisStatus.inconclusive
-    assert result.metrics is None
+    assert result.metrics is not None
+    assert result.metrics.repetitions == 0
+    assert result.metrics.valid_frames == 4
+    assert result.metrics.total_frames == 20
     assert result.message == "Há poucos frames válidos."
     assert result.technical_issue_code == "insufficient_frames"
     assert video.exists() is False

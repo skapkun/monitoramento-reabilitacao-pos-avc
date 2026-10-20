@@ -38,3 +38,15 @@ def test_extracts_limited_compressed_evidence(tmp_path: Path) -> None:
     assert evidence[0].title == "Melhor execução"
     assert evidence[0].content_type == "image/jpeg"
     assert len(evidence[0].image_base64) < 140_000
+
+
+def test_extracts_context_frame_when_there_are_no_events(tmp_path: Path) -> None:
+    video = tmp_path / "movement.avi"
+    make_video(video)
+
+    evidence = EvidenceService().capture(video, [])
+
+    assert len(evidence) == 1
+    assert evidence[0].event_type == "analysis_context"
+    assert evidence[0].title == "Enquadramento usado na análise"
+    assert evidence[0].timestamp_seconds == 1.0

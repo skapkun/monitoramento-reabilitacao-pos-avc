@@ -796,6 +796,12 @@ class FirebaseClinicalRepository implements ClinicalRepository {
           .whereType<Map<String, dynamic>>()
           .map((item) {
             final value = item['bytes'];
+            final bytes = switch (value) {
+              Blob blob => blob.bytes,
+              Uint8List bytes => bytes,
+              List<int> bytes => Uint8List.fromList(bytes),
+              _ => Uint8List(0),
+            };
             return AnalysisEvidence(
               eventIndex: (item['eventIndex'] as num?)?.toInt() ?? 0,
               eventType: item['eventType']?.toString() ?? 'information',
@@ -803,7 +809,7 @@ class FirebaseClinicalRepository implements ClinicalRepository {
               timestampSeconds:
                   (item['timestampSeconds'] as num?)?.toDouble() ?? 0,
               contentType: item['contentType']?.toString() ?? 'image/jpeg',
-              bytes: value is Blob ? value.bytes : Uint8List(0),
+              bytes: bytes,
             );
           })
           .where((item) => item.bytes.isNotEmpty)

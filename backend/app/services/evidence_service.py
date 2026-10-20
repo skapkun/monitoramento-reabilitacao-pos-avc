@@ -36,11 +36,23 @@ class EvidenceService:
             ),
         )
         events = prioritized[: self.maximum_items]
-        if not events:
-            return []
         capture = cv2.VideoCapture(str(video_path))
         if not capture.isOpened():
             return []
+        if not events:
+            fps = capture.get(cv2.CAP_PROP_FPS)
+            frame_count = capture.get(cv2.CAP_PROP_FRAME_COUNT)
+            duration = frame_count / fps if fps and fps > 0 else 0.0
+            events = [
+                (
+                    0,
+                    {
+                        "type": "analysis_context",
+                        "title": "Enquadramento usado na análise",
+                        "start_seconds": max(0.0, duration / 2),
+                    },
+                )
+            ]
         evidence: list[AnalysisEvidence] = []
         try:
             for evidence_index, (_, event) in enumerate(events):
