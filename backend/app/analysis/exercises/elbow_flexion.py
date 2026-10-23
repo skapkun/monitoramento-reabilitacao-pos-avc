@@ -16,6 +16,7 @@ class ElbowFlexionParameters:
     flexed_angle_degrees: float = 90.0
     shoulder_elevation_torso_ratio: float = 0.12
     compensation_frame_ratio: float = 0.20
+    maximum_knee_excursion_degrees: float = 45.0
 
 
 class ElbowFlexionAnalyzer:
@@ -58,6 +59,18 @@ class ElbowFlexionAnalyzer:
             return self._inconclusive("Há poucos frames válidos para uma análise confiável.", side, len(valid_frames), total)
         if ratio < self.parameters.minimum_detection_ratio:
             return self._inconclusive("Os pontos do braço ficaram invisíveis em parte relevante do vídeo.", side, len(valid_frames), total)
+
+        knee_excursion = self._knee_excursion_degrees(valid_frames, side)
+        if (
+            knee_excursion is not None
+            and knee_excursion > self.parameters.maximum_knee_excursion_degrees
+        ):
+            return self._inconclusive(
+                "O movimento observado parece ser de pernas, não uma flexão de cotovelo. Selecione o exercício correto e tente novamente.",
+                side,
+                len(valid_frames),
+                total,
+            )
 
         counter = ElbowRepetitionCounter(
             extended_angle=self.parameters.extended_angle_degrees,
@@ -161,6 +174,28 @@ class ElbowFlexionAnalyzer:
             for frame, value in samples
             if baseline - value >= self.parameters.shoulder_elevation_torso_ratio
         ]
+
+    def _knee_excursion_degrees(
+        self, frames: List[LandmarkFrame], side: str
+    ) -> Optional[float]:
+        angles: List[float] = []
+        names = [f"{side}_hip", f"{side}_knee", f"{side}_ankle"]
+        for frame in frames:
+            if not all(name in frame.landmarks for name in names):
+                continue
+            points = [frame.landmarks[name] for name in names]
+            if min(point.visibility for point in points) < self.parameters.minimum_visibility:
+                continue
+            try:
+                angles.append(joint_angle_degrees(*points))
+            except ValueError:
+                continue
+        if len(angles) < self.parameters.minimum_valid_frames:
+            return None
+        ordered = sorted(angles)
+        lower = ordered[int((len(ordered) - 1) * 0.05)]
+        upper = ordered[int((len(ordered) - 1) * 0.95)]
+        return upper - lower
 
     def _bilateral_summary(
         self, frames: List[LandmarkFrame], affected_side: Optional[str]

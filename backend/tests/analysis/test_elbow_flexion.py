@@ -1,5 +1,7 @@
+import math
+
 from app.analysis.exercises.elbow_flexion import ElbowFlexionAnalyzer
-from app.analysis.models import AnalysisOutcome
+from app.analysis.models import AnalysisOutcome, Landmark
 from tests.analysis.helpers import elbow_frames
 
 
@@ -49,3 +51,22 @@ def test_is_inconclusive_without_complete_cycle():
     result = ElbowFlexionAnalyzer().analyze(elbow_frames([160] * 20))
     assert result.status is AnalysisOutcome.INCONCLUSIVE
     assert "Nenhum ciclo completo" in result.message
+
+
+def test_rejects_squat_that_also_moves_the_arm():
+    frames = elbow_frames(CYCLE + CYCLE)
+    knee_angles = [170, 165, 150, 125, 95, 80, 85, 105, 135, 155, 168, 172] * 2
+    for frame, angle in zip(frames, knee_angles):
+        radians = math.radians(angle)
+        frame.landmarks["right_knee"] = Landmark(1.0, 2.0, visibility=0.99)
+        frame.landmarks["right_ankle"] = Landmark(
+            1.0 + math.sin(radians),
+            2.0 - math.cos(radians),
+            visibility=0.99,
+        )
+
+    result = ElbowFlexionAnalyzer().analyze(frames)
+
+    assert result.status is AnalysisOutcome.INCONCLUSIVE
+    assert "movimento observado parece ser de pernas" in result.message
+    assert result.repetitions == []
